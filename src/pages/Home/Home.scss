@@ -1,0 +1,135 @@
+.home {
+  flex: 1 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px 20px;
+
+  text-align: center;
+
+  &__logo {
+    display: block;
+
+    width: clamp(160px, 18vw, 205px);
+    max-width: 100%;
+    height: auto;
+
+    margin-bottom: 32px;
+  }
+
+  &__title {
+    max-width: 900px;
+    margin: 0;
+
+    color: var(--rauch-text);
+    font-size: clamp(32px, 4.5vw, 58px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -1px;
+
+    span {
+      display: block;
+    }
+  }
+
+  &__title-accent {
+    background: linear-gradient(
+      100deg,
+      #e9bc14,
+      #ed8a08
+    );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
+  }
+
+  &__description {
+    max-width: 540px;
+    margin: 16px 0 32px;
+
+    color: var(--rauch-muted);
+    font-size: clamp(13px, 1.2vw, 16px);
+    line-height: 1.6;
+  }
+
+  &__access {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    max-width: 100%;
+    min-height: 48px;
+    padding: 14px 28px;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--rauch-gradient);
+    color: #101008;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    box-shadow: 0 0 26px rgba(255, 187, 18, 0.2);
+
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+
+      transition: transform 0.2s;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+
+      box-shadow: 0 0 32px rgba(255, 187, 18, 0.3);
+    }
+
+    &:hover svg {
+      transform: translateX(3px);
+    }
+  }
+
+  .secure-note {
+    max-width: 100%;
+    margin-top: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .home {
+    padding: 28px 20px;
+
+    &__logo {
+      width: 165px;
+      margin-bottom: 28px;
+    }
+
+    &__title {
+      font-size: clamp(30px, 7.5vw, 42px);
+      letter-spacing: -0.6px;
+    }
+
+    &__description {
+      max-width: 340px;
+      margin: 14px 0 28px;
+    }
+
+    .secure-note {
+      font-size: 9px;
+      letter-spacing: 0.8px;
+    }
+  }
+}

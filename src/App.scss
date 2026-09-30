@@ -1,0 +1,37 @@
+.app-shell {
+  position: relative;
+  isolation: isolate;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  background: var(--rauch-background);
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+
+    pointer-events: none;
+
+    background: radial-gradient(
+      ellipse 65% 85% at 50% 14%,
+      rgba(173, 128, 16, 0.18),
+      rgba(91, 65, 4, 0.08) 48%,
+      transparent 78%
+    );
+  }
+
+  // El login utiliza su propio enlace para volver al inicio.
+  &:has(.login-page) {
+    .site-header,
+    .site-footer {
+      display: none;
+    }
+  }
+}

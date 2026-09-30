@@ -1,0 +1,84 @@
+@use "./reset";
+@use "./variables" as v;
+
+:root {
+  color-scheme: dark;
+
+  font-family: v.$font-family;
+  color: v.$text;
+  background: v.$background;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  --rauch-primary: #{v.$primary};
+  --rauch-background: #{v.$background};
+  --rauch-text: #{v.$text};
+  --rauch-text-secondary: #{v.$text-secondary};
+  --rauch-muted: #{v.$text-muted};
+
+  --rauch-gradient: linear-gradient(
+    100deg,
+    #{v.$primary} 0%,
+    #{v.$primary-end} 100%
+  );
+}
+
+body {
+  min-width: 320px;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--rauch-primary);
+  outline-offset: 4px;
+}
+
+.secure-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  color: #a5a396;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: uppercase;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  span {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
