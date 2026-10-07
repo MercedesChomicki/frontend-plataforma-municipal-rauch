@@ -14,7 +14,10 @@ import municipalLogo from '../../assets/images/logo-letras-blancas.svg';
 import './Login.scss';
 
 interface LoginProps {
-  onLogin: (username: string, password: string) => void | Promise<void>;
+  onLogin: (
+    username: string, 
+    password: string
+  ) => Promise<boolean>;
   isLoading: boolean;
   error?: string | null;
 }

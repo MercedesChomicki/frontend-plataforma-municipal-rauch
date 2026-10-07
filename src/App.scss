@@ -27,10 +27,24 @@
     );
   }
 
-  // El login utiliza su propio enlace para volver al inicio.
+  // Login: ocultar el encabezado y el pie generales.
   &:has(.login-page) {
     .site-header,
     .site-footer {
+      display: none;
+    }
+  }
+
+  // Panel: usar fondo claro y su propio encabezado.
+  &:has(.control-panel) {
+  background: #f1f3f8;
+
+    &::before {
+      display: none;
+    }
+
+    > .site-header,
+    > .site-footer {
       display: none;
     }
   }
