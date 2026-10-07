@@ -1,23 +1,59 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { iniciarSesion } from '../services/authService';
+import type { ApiUser, Role } from '../services/authService';
 
-/**
- * Información del usuario autenticado
- */
-interface User {
+export interface User {
+  id: number;
+  username: string;
   name: string;
   role: string;
   department: string;
+  roles: Role[];
 }
 
-/**
- * Hook de autenticación y control de acceso
- */
+function adaptarUsuario(apiUser: ApiUser): User {
+  const fullName = [
+    apiUser.nombre,
+    apiUser.apellido,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  const role = apiUser.roles
+    .map((item) =>
+      item.nombre === 'adminDios'
+        ? 'Superadministrador'
+        : item.nombre,
+    )
+    .join(', ');
+
+  return {
+    id: apiUser.id,
+    username: apiUser.username,
+    name: fullName || apiUser.username,
+    role: role || 'Sin rol asignado',
+    department: '',
+    roles: apiUser.roles,
+  };
+}
+
 export function useAuth() {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [accessToken, setAccessToken] = useState<string | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Evita enviar dos solicitudes al mismo tiempo.
+  const loginPending = useRef(false);
+
+  // Permite descartar una respuesta si se cerró la sesión.
+  const requestId = useRef(0);
+
+  const isAuthenticated = user !== null && accessToken !== null;
 
   const openModal = (): void => {
     setError(null);
@@ -29,40 +65,78 @@ export function useAuth() {
     setError(null);
   };
 
-  const login = (username: string, password: string): void => {
-    setIsLoading(true);
+  const login = async (
+    username: string,
+    password: string,
+  ): Promise<boolean> => {
+    if (loginPending.current) {
+      return false;
+    }
+
     setError(null);
 
-    setTimeout(() => {
-      if (username.trim() && password.length >= 4) {
-        setIsAuthenticated(true);
+    if (!username.trim() || !password) {
+      setError('Ingresá tu usuario y contraseña.');
+      return false;
+    }
 
-        setUser({
-          name: username,
-          role: 'Operador de Guardia',
-          department: 'Centro de Monitoreo Rauch',
-        });
+    loginPending.current = true;
+    const currentRequest = ++requestId.current;
+    setIsLoading(true);
 
-        setIsModalOpen(false);
-      } else {
-        setError(
-          'Credenciales inválidas. Ingrese un usuario y clave válidos.'
-        );
+    try {
+      const session = await iniciarSesion(username, password);
+
+      if (currentRequest !== requestId.current) {
+        return false;
       }
 
-      setIsLoading(false);
-    }, 800);
+      setAccessToken(session.accessToken);
+      setUser(adaptarUsuario(session.user));
+      setIsModalOpen(false);
+
+      return true;
+    } catch (err: unknown) {
+      if (currentRequest !== requestId.current) {
+        return false;
+      }
+
+      setAccessToken(null);
+      setUser(null);
+
+      setError(
+        err instanceof TypeError
+          ? 'No pudimos conectar con el sistema. Intentá nuevamente en unos minutos. Si el problema continúa, contactá al administrador.'
+          : err instanceof Error
+            ? err.message
+            : 'Ocurrió un error al iniciar sesión.',
+      );
+
+      return false;
+    } finally {
+      loginPending.current = false;
+
+      if (currentRequest === requestId.current) {
+        setIsLoading(false);
+      }
+    }
   };
 
   const logout = (): void => {
-    setIsAuthenticated(false);
+    requestId.current += 1;
+
+    setAccessToken(null);
     setUser(null);
+    setError(null);
+    setIsLoading(false);
+    setIsModalOpen(false);
   };
 
   return {
     isModalOpen,
     isAuthenticated,
     user,
+    accessToken,
     isLoading,
     error,
     openModal,
