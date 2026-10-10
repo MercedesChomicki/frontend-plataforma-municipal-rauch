@@ -48,4 +48,17 @@
       display: none;
     }
   }
+
+  &:has(.events-page) {
+    background: #f1f3f8;
+
+    &::before {
+      display: none;
+    }
+
+    > .site-header,
+    > .site-footer {
+      display: none;
+    }
+  }
 }

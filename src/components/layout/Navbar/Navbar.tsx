@@ -1,28 +1,87 @@
-import "./Navbar.scss";
+import { LogOut } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
-import logo from "../../../assets/images/logo-letras-blancas.svg"
-import { Link } from "react-router";
+import municipalLogo from '../../../assets/images/logo-letras-blancas.svg';
+import './Navbar.scss';
 
-export default function Navbar() {
-    return (
-        <header className="navbar">
+interface NavbarProps {
+  user: {
+    name: string;
+    role?: string;
+  };
+  onLogout: () => void;
+}
 
-            <div className="navbar__logo">
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase();
+}
 
-                <img src={logo} alt="Logo Municipalidad" />
+export default function Navbar({ user, onLogout }: NavbarProps) {
+  return (
+    <header className="navbar">
+      <NavLink
+        to="/panel"
+        className="navbar__brand"
+        aria-label="Ir al panel de control"
+      >
+        <img src={municipalLogo} alt="Municipalidad de Rauch" />
+      </NavLink>
 
-            </div>
+      <nav className="navbar__nav" aria-label="Navegación principal">
+        <NavLink
+          to="/panel"
+          end
+          className={({ isActive }) =>
+            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+          }
+        >
+          Panel de control
+        </NavLink>
 
-            <Link
-              to="/login"
-              className="navbar__button"
-            >
+        <NavLink
+          to="/eventos"
+          className={({ isActive }) =>
+            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+          }
+        >
+          Eventos
+        </NavLink>
 
-                Acceder
-                <span>→</span>
+        <span className="navbar__pending" title="Próximamente">
+          Mapa
+        </span>
 
-            </Link>
+        <span className="navbar__pending" title="Próximamente">
+          Reportes
+        </span>
+      </nav>
 
-        </header>
-    );
+      <div className="navbar__account">
+        <span className="navbar__avatar" aria-hidden="true">
+          {getInitials(user.name)}
+        </span>
+
+        <div className="navbar__user">
+          <strong>{user.name}</strong>
+          {user.role && <span>{user.role}</span>}
+        </div>
+
+        <button
+          className="navbar__logout"
+          type="button"
+          onClick={onLogout}
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+        >
+          <LogOut aria-hidden="true" />
+        </button>
+      </div>
+    </header>
+  );
 }

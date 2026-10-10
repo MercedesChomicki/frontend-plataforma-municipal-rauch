@@ -3,13 +3,10 @@ import {
   CalendarDays,
   CalendarCheck,
   Clock3,
-  LogOut,
   MapPin,
   Plus,
   TriangleAlert,
 } from 'lucide-react';
-
-import municipalLogo from '../../assets/images/logo-letras-blancas.svg';
 
 import { useDashboard } from '../../hooks/useDashboard';
 import type {
@@ -38,16 +35,6 @@ const statusClasses: Record<EventStatus, string> = {
   Abierto: 'open',
   Cerrado: 'closed',
 };
-
-function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase();
-}
 
 function EvolutionChart({ data }: { data: DailyCount[] }) {
   const left = 42;
@@ -267,72 +254,6 @@ export default function ControlPanel({
 
   return (
     <div className="control-panel">
-      <header className="panel-header">
-        <img
-          className="panel-header__logo"
-          src={municipalLogo}
-          alt="Municipalidad de Rauch"
-        />
-
-        <nav
-          className="panel-header__nav"
-          aria-label="Navegación del panel"
-        >
-          <button
-            className="panel-header__nav-item panel-header__nav-item--active"
-            type="button"
-            aria-current="page"
-          >
-            Panel de control
-          </button>
-
-          <button
-            className="panel-header__nav-item"
-            type="button"
-            onClick={() => onNavigate('eventos')}
-          >
-            Eventos
-          </button>
-
-          <button
-            className="panel-header__nav-item"
-            type="button"
-            onClick={() => onNavigate('mapa')}
-          >
-            Mapa
-          </button>
-
-          <button
-            className="panel-header__nav-item"
-            type="button"
-            onClick={() => onNavigate('reportes')}
-          >
-            Reportes
-          </button>
-        </nav>
-
-        <div className="panel-header__account">
-          <span className="panel-header__avatar" aria-hidden="true">
-            {getInitials(user.name)}
-          </span>
-
-          <div className="panel-header__user">
-            <strong>{user.name}</strong>
-            <span>{user.role || 'Operador'}</span>
-          </div>
-
-          <button
-            className="panel-header__logout"
-            type="button"
-            onClick={onLogout}
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
-          >
-            <LogOut aria-hidden="true" />
-          </button>
-        </div>
-      </header>
-
       <main className="control-panel__main">
         <section
           className="control-panel__heading"

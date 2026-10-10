@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import './App.scss';
 
 import AppRouter from './router/AppRouter';
@@ -10,11 +10,23 @@ import Footer from './components/layout/Footer/Footer';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
 import ControlPanel from './pages/ControlPanel/ControlPanel';
+import Events from './pages/Events/Events';
+import Navbar from './components/layout/Navbar/Navbar';
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
   const auth = useAuth();
   const navigate = useNavigate();
+
+  const { pathname } = useLocation();
+
+  const isAccessPage = pathname === '/' || pathname === '/login';
+
+  const showNavbar = 
+    !isAccessPage && 
+    auth.isAuthenticated && 
+    Boolean(auth.user) && 
+    Boolean(auth.accessToken);
 
   const handleLogout = () => {
     auth.logout();
@@ -23,7 +35,16 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header timeStr={timeStr} dateStr={dateStr} />
+      {isAccessPage && (
+        <Header timeStr={timeStr} dateStr={dateStr} />
+      )}
+
+      {showNavbar && auth.user && (
+        <Navbar
+          user={auth.user}
+          onLogout={handleLogout}
+        />
+      )}
 
       <AppRouter
         home={
@@ -57,10 +78,20 @@ export default function App() {
             <Navigate to="/login" replace />
           )
         }
+        events={
+          auth.isAuthenticated && auth.accessToken ? (
+            <Events
+              accessToken={auth.accessToken}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
         
       />
 
-      <Footer />
+      {isAccessPage && <Footer />}
     </div>
   );
 }
