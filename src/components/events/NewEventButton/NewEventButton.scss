@@ -1,0 +1,44 @@
+.new-event-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 44px;
+  padding: 12px 22px;
+
+  border: 0;
+  border-radius: 999px;
+  background: var(
+    --rauch-gradient,
+    linear-gradient(100deg, #ffc51b, #ff9335)
+  );
+
+  &,
+  &:visited {
+    color: #172033;
+    text-decoration: none;
+  }
+
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+
+  box-shadow: 0 3px 8px rgba(23, 32, 51, 0.12);
+  transition: box-shadow 150ms ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(23, 32, 51, 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #b77900;
+    outline-offset: 4px;
+  }
+}

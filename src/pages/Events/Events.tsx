@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { EventsError, getEvents } from '../../services/eventsService';
 import type { EventRecord } from '../../services/eventsService';
 import './Events.scss';
+import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
 
 interface EventsProps {
   accessToken: string;
@@ -248,13 +249,18 @@ export default function Events({
             <p>Centro de Monitoreo · Consulta de registros</p>
           </div>
 
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => setVersion(value => value + 1)}
-          >
-            {isLoading ? 'Cargando…' : 'Actualizar'}
-          </button>
+          <div className="events-page__actions">
+            <NewEventButton />
+
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => setVersion(value => value + 1)}
+            >
+              {isLoading ? 'Cargando…' : 'Actualizar'}
+            </button>
+          </div>
+          
         </div>
 
         <section className="events-page__filters" aria-label="Filtros">

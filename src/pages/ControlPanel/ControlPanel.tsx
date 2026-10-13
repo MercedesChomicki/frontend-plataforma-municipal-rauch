@@ -4,7 +4,6 @@ import {
   CalendarCheck,
   Clock3,
   MapPin,
-  Plus,
   TriangleAlert,
 } from 'lucide-react';
 
@@ -16,6 +15,7 @@ import type {
 } from '../../types/dashboard';
 
 import './ControlPanel.scss';
+import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
 
 type PanelSection = 'eventos' | 'mapa' | 'reportes';
 
@@ -215,7 +215,6 @@ export default function ControlPanel({
   user,
   accessToken,
   onLogout,
-  onNewEvent,
   onNavigate,
 }: ControlPanelProps) {
 
@@ -269,14 +268,7 @@ export default function ControlPanel({
             </p>
           </div>
 
-          <button
-            className="control-panel__new-event"
-            type="button"
-            onClick={onNewEvent}
-          >
-            <Plus aria-hidden="true" />
-            Nuevo evento
-          </button>
+          <NewEventButton />
         </section>
 
         {isLoading && (

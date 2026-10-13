@@ -6,6 +6,7 @@ interface AppRouterProps {
   login: ReactElement;
   panel: ReactElement;
   events: ReactElement;
+  newEvent: ReactElement;
 }
 
 export default function AppRouter({
@@ -13,6 +14,7 @@ export default function AppRouter({
   login,
   panel,
   events,
+  newEvent,
 }: AppRouterProps) {
   return (
     <Routes>
@@ -20,6 +22,7 @@ export default function AppRouter({
       <Route path="/login" element={login} />
       <Route path="/panel" element={panel} />
       <Route path="/eventos" element={events} />
+      <Route path="/eventos/nuevo" element={newEvent} />
      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

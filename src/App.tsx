@@ -12,6 +12,7 @@ import Login from './pages/Login/Login';
 import ControlPanel from './pages/ControlPanel/ControlPanel';
 import Events from './pages/Events/Events';
 import Navbar from './components/layout/Navbar/Navbar';
+import NewEvent from './pages/NewEvent/NewEvent';
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -81,6 +82,16 @@ export default function App() {
         events={
           auth.isAuthenticated && auth.accessToken ? (
             <Events
+              accessToken={auth.accessToken}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        newEvent={
+          auth.isAuthenticated && auth.accessToken ? (
+            <NewEvent
               accessToken={auth.accessToken}
               onLogout={handleLogout}
             />
