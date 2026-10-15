@@ -3,6 +3,7 @@ import { EventsError, getEvents } from '../../services/eventsService';
 import type { EventRecord } from '../../services/eventsService';
 import './Events.scss';
 import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
+import { Link } from 'react-router-dom';
 
 interface EventsProps {
   accessToken: string;
@@ -449,25 +450,26 @@ export default function Events({
                 <th scope="col">Fecha y hora de ocurrencia</th>
                 <th scope="col">Servicio</th>
                 <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
               </tr>
             </thead>
 
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} role="status">Cargando eventos…</td>
+                  <td colSpan={9} role="status">Cargando eventos…</td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={8}>No se pudo cargar el listado.</td>
+                  <td colSpan={9}>No se pudo cargar el listado.</td>
                 </tr>
               ) : invalidDates ? (
                 <tr>
-                  <td colSpan={8}>Corregí el rango de fechas.</td>
+                  <td colSpan={9}>Corregí el rango de fechas.</td>
                 </tr>
               ) : visible.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={9}>
                     {events.length === 0
                       ? 'Todavía no hay eventos registrados.'
                       : 'No hay eventos que coincidan con los filtros.'}
@@ -512,6 +514,15 @@ export default function Events({
                       >
                         {label(event.estado)}
                       </span>
+                    </td>
+                    <td>
+                      <Link
+                        to={`/eventos/${event.id}`}
+                        className="events-page__detail-link"
+                        aria-label={`Ver detalle del evento ${event.numero_evento}`}
+                      >
+                        Ver detalle
+                      </Link>
                     </td>
                   </tr>
                 );

@@ -234,3 +234,29 @@
     }
   }
 }
+
+.events-page__detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 40px;
+  padding: 8px 12px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+
+  &,
+  &:visited {
+    color: #172033;
+    text-decoration: none;
+  }
+
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:hover {
+    background: #e8edf5;
+  }
+}

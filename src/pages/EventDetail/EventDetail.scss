@@ -1,0 +1,129 @@
+.event-detail {
+  flex: 1;
+  min-width: 0;
+  padding: clamp(20px, 3vw, 40px);
+
+  background: #f1f3f8;
+  color: #172033;
+  color-scheme: light;
+
+  &__container {
+    width: 100%;
+    max-width: 1000px;
+    margin-inline: auto;
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 3vw, 36px);
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  }
+
+  &__secondary,
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    padding: 10px 16px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #172033;
+
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      background: #e8edf5;
+    }
+  }
+
+  &__secondary:visited {
+    color: #172033;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid #b77900;
+    outline-offset: 4px;
+  }
+
+  &__card {
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid #dce2eb;
+    border-radius: 14px;
+    background: #fff;
+
+    h2 {
+      margin: 0 0 24px;
+      font-size: 20px;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin: 0;
+
+    > div {
+      min-width: 0;
+    }
+
+    dt {
+      margin-bottom: 8px;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__wide {
+    grid-column: 1 / -1;
+  }
+
+  &__error {
+    padding: 16px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff1f2;
+    color: #991b1b;
+
+    p {
+      margin: 0 0 12px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .event-detail__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
