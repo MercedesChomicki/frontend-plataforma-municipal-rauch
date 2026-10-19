@@ -16,17 +16,13 @@ import type {
 
 import './ControlPanel.scss';
 import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
+import type { User } from '../../hooks/useAuth';
 
 type PanelSection = 'eventos' | 'mapa' | 'reportes';
 
 interface ControlPanelProps {
-  user: {
-    name: string;
-    department?: string;
-    role?: string;
-  };
+  user: User;
   onLogout: () => void;
-  onNewEvent: () => void;
   onNavigate: (section: PanelSection) => void;
   accessToken: string;
 }
@@ -268,7 +264,10 @@ export default function ControlPanel({
             </p>
           </div>
 
-          <NewEventButton />
+          {user.permisos.includes('eventos:write') &&
+            user.areas_acceso.includes('videoseguridad') && (
+              <NewEventButton />
+            )}
         </section>
 
         {isLoading && (

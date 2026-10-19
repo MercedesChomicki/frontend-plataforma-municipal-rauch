@@ -5,7 +5,7 @@ const API_URL = (
 export interface Permission {
   id: number;
   code: string;
-  description: string;
+  description: string | null;
 }
 
 export interface Role {
@@ -23,6 +23,11 @@ export interface ApiUser {
   roles: Role[];
   activo: boolean;
   fecha_creacion: string;
+
+  rol: string | null;
+  area: string | null;
+  permisos: string[];
+  areas_acceso: string[];
 }
 
 interface TokenResponse {
@@ -65,14 +70,14 @@ export async function iniciarSesion(
     }
 
     throw new Error(
-      `No se pudo iniciar sesión. Código: ${tokenResponse.status}.`,
+      `No se pudo iniciar sesión. Intentá nuevamente en unos minutos.'`,
     );
   }
 
   const token: TokenResponse = await tokenResponse.json();
 
   if (!token.access_token) {
-    throw new Error('El backend no devolvió un token de acceso.');
+    throw new Error('No pudimos completar el inicio de sesión. Intentá nuevamente.');
   }
 
   const userResponse = await fetch(`${API_URL}/auth/me`, {

@@ -4,9 +4,11 @@ import type { EventRecord } from '../../services/eventsService';
 import './Events.scss';
 import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
 import { Link } from 'react-router-dom';
+import type { User } from '../../hooks/useAuth';
 
 interface EventsProps {
   accessToken: string;
+  user:User;
   onLogout: () => void;
 }
 
@@ -77,6 +79,7 @@ const statusClasses: Record<string, string> = {
 
 export default function Events({
   accessToken,
+  user,
   onLogout,
 }: EventsProps) {
   const [events, setEvents] = useState<EventRecord[]>([]);
@@ -251,7 +254,10 @@ export default function Events({
           </div>
 
           <div className="events-page__actions">
-            <NewEventButton />
+            {user.permisos.includes('eventos:write') &&
+              user.areas_acceso.includes('videoseguridad') && (
+                <NewEventButton />
+              )}
 
             <button
               type="button"

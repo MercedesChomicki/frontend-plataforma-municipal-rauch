@@ -14,6 +14,9 @@ export interface EventRecord {
   direccion: string | null;
   turno: string | null;
   servicio_actuante: string | null;
+  fecha_cierre: string | null;
+  cerrado_por_id: number | null;
+  observaciones_cierre: string | null;
 }
 
 export class EventsError extends Error {
@@ -41,15 +44,8 @@ export async function getEvents(
   );
 
   if (!response.ok) {
-    throw new EventsError(
-      response.status === 401
-        ? 'Tu sesión venció. Volvé a ingresar.'
-        : response.status === 403
-          ? 'No tenés permiso para consultar estos eventos.'
-          : 'No pudimos cargar los eventos. Intentá nuevamente.',
-      response.status,
-    );
-  }
+  throw requestError(response.status);
+}
 
   const events: EventRecord[] = await response.json();
 
@@ -79,18 +75,19 @@ export interface CreateEventInput {
 }
 
 function requestError(status: number): EventsError {
-  const message =
-    status === 401
-      ? 'Tu sesión venció. Volvé a ingresar.'
-      : status === 403
-        ? 'No tenés permiso para realizar esta operación.'
-        : status === 422
-          ? 'El sistema rechazó algunos datos. Revisá el formulario.'
-          : status === 400
-            ? 'No pudimos guardar el evento. Revisá los datos ingresados.'
-            : 'No pudimos completar la operación. Intentá nuevamente.';
+  const messages: Record<number, string> = {
+    400: 'No se pudo realizar la operación. Revisá los datos ingresados.',
+    401: 'Tu sesión venció. Volvé a ingresar.',
+    403: 'No tenés permiso para realizar esta operación.',
+    404: 'El evento no existe o ya no está disponible.',
+    422: 'El sistema rechazó algunos datos. Revisá el formulario.',
+  };
 
-  return new EventsError(message, status);
+  return new EventsError(
+    messages[status] ??
+      'No pudimos completar la operación. Intentá nuevamente.',
+    status,
+  );
 }
 
 export async function getEventTypes(
@@ -126,6 +123,58 @@ export async function createEvent(
   });
 
   if (!response.ok) throw requestError(response.status);
+
+  return response.json();
+}
+
+export async function getEvent(
+  token: string,
+  id: number,
+  signal: AbortSignal,
+): Promise<EventRecord> {
+  const response = await fetch(`${API_URL}/eventos/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw requestError(response.status);
+  }
+
+  return response.json();
+}
+
+export async function closeEvent(
+  token: string,
+  id: number,
+  observations: string,
+): Promise<EventRecord> {
+  const text = observations.trim();
+
+  if (!text) {
+    throw new EventsError(
+      'Ingresá las observaciones de cierre.',
+      400,
+    );
+  }
+
+  const response = await fetch(`${API_URL}/eventos/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      estado: 'cerrado',
+      observaciones_cierre: text,
+    }),
+  });
+
+  if (!response.ok) {
+    throw requestError(response.status);
+  }
 
   return response.json();
 }

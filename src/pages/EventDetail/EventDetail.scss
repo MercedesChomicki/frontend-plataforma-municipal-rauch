@@ -127,3 +127,55 @@
     gap: 20px;
   }
 }
+
+.event-detail {
+  &__card + &__card {
+    margin-top: 24px;
+  }
+
+  &__close-form {
+    display: grid;
+    gap: 16px;
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #172033;
+
+      font: inherit;
+      line-height: 1.5;
+      resize: vertical;
+
+      &:focus-visible {
+        outline: 2px solid #b77900;
+        outline-offset: 3px;
+      }
+    }
+
+    > p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    > button {
+      justify-self: start;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+}

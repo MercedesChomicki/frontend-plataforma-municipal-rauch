@@ -73,7 +73,6 @@ export default function App() {
               user={auth.user}
               accessToken={auth.accessToken}
               onLogout={handleLogout}
-              onNewEvent={() => navigate('/eventos/nuevo')}
               onNavigate={section => navigate(`/${section}`)}
             />
           ) : (
@@ -81,9 +80,10 @@ export default function App() {
           )
         }
         events={
-          auth.isAuthenticated && auth.accessToken ? (
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
             <Events
               accessToken={auth.accessToken}
+              user={auth.user}
               onLogout={handleLogout}
             />
           ) : (
@@ -91,19 +91,25 @@ export default function App() {
           )
         }
         newEvent={
-          auth.isAuthenticated && auth.accessToken ? (
-            <NewEvent
-              accessToken={auth.accessToken}
-              onLogout={handleLogout}
-            />
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
+            auth.user.permisos.includes('eventos:write') &&
+            auth.user.areas_acceso.includes('videoseguridad') ? (
+              <NewEvent
+                accessToken={auth.accessToken}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <Navigate to="/eventos" replace />
+            )
           ) : (
             <Navigate to="/login" replace />
           )
         }
         eventDetail={
-          auth.isAuthenticated && auth.accessToken ? (
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
             <EventDetail
               accessToken={auth.accessToken}
+              user={auth.user}
               onLogout={handleLogout}
             />
           ) : (

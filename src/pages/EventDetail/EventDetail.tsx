@@ -3,14 +3,18 @@ import { Link, useParams } from 'react-router-dom';
 
 import {
   EventsError,
-  getEvents,
+  getEvent,
 } from '../../services/eventsService';
 import type { EventRecord } from '../../services/eventsService';
+
+import type { User } from '../../hooks/useAuth';
+import CloseEventForm from '../../components/events/CloseEventForm/CloseEventForm';
 
 import './EventDetail.scss';
 
 interface EventDetailProps {
   accessToken: string;
+  user: User;
   onLogout: () => void;
 }
 
@@ -37,6 +41,7 @@ function label(value: string): string {
 
 export default function EventDetail({
   accessToken,
+  user,
   onLogout,
 }: EventDetailProps) {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +51,12 @@ export default function EventDetail({
   const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [version, setVersion] = useState(0);
+
+  const canClose = 
+    event !== null &&
+    event.estado === 'abierto' &&
+    user.permisos.includes('eventos:write') &&
+    user.areas_acceso.includes(event.area); 
 
   useEffect(() => {
     const controller = new AbortController();
@@ -67,23 +78,16 @@ export default function EventDetail({
 
       try {
         // Consulta temporal: reutiliza el listado existente.
-        const events = await getEvents(
+        const result = await getEvent(
           accessToken,
+          eventId,
           controller.signal,
         );
 
         if (!active) return;
 
-        const result = events.find(item => item.id === eventId);
-
-        if (!result) {
-          setError(
-            'El evento no está disponible en los registros consultados.',
-          );
-          return;
-        }
-
         setEvent(result);
+        
       } catch (err: unknown) {
         if (!active) return;
 
@@ -218,6 +222,58 @@ export default function EventDetail({
                 </div>
               </dl>
             </section>
+
+            {canClose && event && (
+              <section
+                className="event-detail__card"
+                aria-labelledby="event-close-heading"
+              >
+                <h2 id="event-close-heading">Cerrar evento</h2>
+
+                <CloseEventForm
+                  key={event.id}
+                  accessToken={accessToken}
+                  eventId={event.id}
+                  onClosed={updatedEvent => {
+                    setEvent(updatedEvent);
+                  }}
+                  onSessionExpired={onLogout}
+                />
+              </section>
+            )}
+
+            {event.estado === 'cerrado' && (
+              <section
+                className="event-detail__card"
+                aria-labelledby="event-closure-heading"
+              >
+                <h2 id="event-closure-heading">
+                  Información de cierre
+                </h2>
+
+                <dl className="event-detail__grid">
+                  <div>
+                    <dt>Fecha y hora de cierre</dt>
+                    <dd>{formatDate(event.fecha_cierre)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>ID del usuario responsable</dt>
+                    <dd>
+                      {event.cerrado_por_id ?? 'Sin información'}
+                    </dd>
+                  </div>
+
+                  <div className="event-detail__wide">
+                    <dt>Observaciones de cierre</dt>
+                    <dd>
+                      {event.observaciones_cierre ||
+                        'Sin información'}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            )}
           </>
         )}
       </div>

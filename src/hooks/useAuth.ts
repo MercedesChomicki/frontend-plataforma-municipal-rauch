@@ -9,7 +9,17 @@ export interface User {
   role: string;
   department: string;
   roles: Role[];
+
+  area: string | null;
+  permisos: string[];
+  areas_acceso: string[];
 }
+
+const AREA_LABELS: Record<string, string> = {
+  videoseguridad: 'Centro de Monitoreo',
+  zoonosis: 'Zoonosis',
+  bromatologia: 'Bromatología',
+};
 
 function adaptarUsuario(apiUser: ApiUser): User {
   const fullName = [
@@ -20,21 +30,34 @@ function adaptarUsuario(apiUser: ApiUser): User {
     .join(' ')
     .trim();
 
-  const role = apiUser.roles
-    .map((item) =>
-      item.nombre === 'adminDios'
-        ? 'Superadministrador'
-        : item.nombre,
+  const roleNames = apiUser.roles.map(item => item.nombre);
+
+  if (roleNames.length === 0 && apiUser.rol) {
+    roleNames.push(apiUser.rol);
+  }
+
+  const role = roleNames
+    .map(name =>
+      name === 'adminDios' ? 'Superadministrador' : name,
     )
     .join(', ');
+
+  const area = apiUser.area;
 
   return {
     id: apiUser.id,
     username: apiUser.username,
     name: fullName || apiUser.username,
     role: role || 'Sin rol asignado',
-    department: '',
+    department: area 
+      ? AREA_LABELS[area] ?? area 
+      : apiUser.areas_acceso.length > 1 
+        ? 'Todas las áreas'
+        : 'Sin área asignada',
     roles: apiUser.roles,
+    area,
+    permisos: apiUser.permisos,
+    areas_acceso: apiUser.areas_acceso,
   };
 }
 
