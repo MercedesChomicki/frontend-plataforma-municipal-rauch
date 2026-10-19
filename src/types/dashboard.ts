@@ -1,19 +1,55 @@
-export type EventStatus = 'Abierto' | 'Cerrado';
+export type EventStatus = 'Abierto' | 'Cerrado' | 'Anulado';
 
 export interface ApiEvent {
   id: number;
+  numero_evento: number;
   area: string;
   tipo_evento: string;
   descripcion: string | null;
-  estado: 'abierto' | 'cerrado';
+  estado: string;
   fecha_ocurrencia: string | null;
-  fecha_creacion: string;
   direccion: string | null;
   servicio_actuante: string | null;
 }
 
+export interface ApiPeriod {
+  desde: string;
+  hasta: string;
+}
+
+export interface ApiDashboardSummary {
+  area: string | null;
+  generado_en: string;
+
+  periodos: {
+    hoy: ApiPeriod;
+    semana: ApiPeriod;
+    mes: ApiPeriod;
+    ultimos_30_dias: ApiPeriod;
+  };
+
+  eventos_mes: number;
+  eventos_semana: number;
+  eventos_hoy: number;
+  eventos_abiertos: number;
+
+  evolucion_diaria: {
+    fecha: string;
+    cantidad: number;
+  }[];
+
+  distribucion_por_tipo: {
+    area: string;
+    tipo_evento: string;
+    cantidad: number;
+  }[];
+
+  ultimos_eventos: ApiEvent[];
+}
+
 export interface MunicipalEvent {
   id: string;
+  number: number;
   title: string;
   type: string;
   date: string;
@@ -36,6 +72,8 @@ export interface TypeCount {
 }
 
 export interface DashboardSummary {
+  area: string | null;
+  generatedAt: string;
   month: number;
   week: number;
   today: number;
@@ -43,5 +81,4 @@ export interface DashboardSummary {
   evolution: DailyCount[];
   byType: TypeCount[];
   recentEvents: MunicipalEvent[];
-  withoutOccurrence: number;
 }

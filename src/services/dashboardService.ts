@@ -1,6 +1,8 @@
 import type {
+  ApiDashboardSummary,
   ApiEvent,
   DashboardSummary,
+  EventStatus,
   MunicipalEvent,
 } from '../types/dashboard';
 
@@ -20,8 +22,22 @@ const colors = [
   '#de3b91',
 ];
 
+const dateFormatter = new Intl.DateTimeFormat('es-AR', {
+  timeZone: TIME_ZONE,
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
+const timeFormatter = new Intl.DateTimeFormat('es-AR', {
+  timeZone: TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
 export class DashboardError extends Error {
-  public readonly status: number;
+  readonly status: number;
 
   constructor(message: string, status: number) {
     super(message);
@@ -30,159 +46,104 @@ export class DashboardError extends Error {
   }
 }
 
-const calendarFormatter = new Intl.DateTimeFormat('en-US', {
-  timeZone: TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
-function calendarKey(date: Date): string {
-  const parts = calendarFormatter.formatToParts(date);
-
-  const get = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '';
-
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-
-// UTC se usa aquí únicamente para operar sobre días calendario,
-// después de obtener el día correspondiente al horario argentino.
-function shiftDay(key: string, amount: number): string {
-  const date = new Date(`${key}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + amount);
-  return date.toISOString().slice(0, 10);
-}
-
-function shortDate(key: string): string {
-  return `${key.slice(8, 10)}/${key.slice(5, 7)}`;
-}
-
 function typeLabel(value: string): string {
   const text = value.replace(/_/g, ' ');
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function occurrence(event: ApiEvent): Date | null {
-  if (!event.fecha_ocurrencia) return null;
+function shortDate(value: string): string {
+  // La API devuelve un día calendario: YYYY-MM-DD.
+  // No lo convertimos a Date para evitar desplazamientos horarios.
+  return `${value.slice(8, 10)}/${value.slice(5, 7)}`;
+}
 
-  const date = new Date(event.fecha_ocurrencia);
-  return Number.isNaN(date.getTime()) ? null : date;
+function typeColor(type: string): string {
+  const hash = [...type].reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0,
+  );
+
+  return colors[hash % colors.length];
+}
+
+function statusLabel(status: string): EventStatus {
+  switch (status) {
+    case 'abierto':
+      return 'Abierto';
+
+    case 'cerrado':
+      return 'Cerrado';
+
+    case 'anulado':
+      return 'Anulado';
+
+    default:
+      throw new DashboardError(
+        'El panel recibió un estado de evento no compatible.',
+        200,
+      );
+  }
 }
 
 function toTableEvent(event: ApiEvent): MunicipalEvent {
-  const date = occurrence(event);
+  const parsedDate = event.fecha_ocurrencia
+    ? new Date(event.fecha_ocurrencia)
+    : null;
+
+  const date =
+    parsedDate && !Number.isNaN(parsedDate.getTime())
+      ? parsedDate
+      : null;
 
   return {
     id: String(event.id),
+    number: event.numero_evento,
     title: event.descripcion || 'Sin descripción',
     type: typeLabel(event.tipo_evento),
     date: date
-      ? new Intl.DateTimeFormat('es-AR', {
-          timeZone: TIME_ZONE,
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }).format(date)
+      ? dateFormatter.format(date)
       : 'Sin fecha de ocurrencia',
-    time: date
-      ? new Intl.DateTimeFormat('es-AR', {
-          timeZone: TIME_ZONE,
-          hour: '2-digit',
-          minute: '2-digit',
-          hourCycle: 'h23',
-        }).format(date)
-      : '—',
+    time: date ? timeFormatter.format(date) : '—',
     location: event.direccion || 'Sin ubicación',
-    service: event.servicio_actuante || 'Sin servicio informado',
-    status: event.estado === 'abierto' ? 'Abierto' : 'Cerrado',
+    service: event.servicio_actuante
+      ? typeLabel(event.servicio_actuante)
+      : 'Sin servicio informado',
+    status: statusLabel(event.estado),
   };
 }
 
-export function calculateSummary(
-  events: ApiEvent[],
-  now: Date = new Date(),
+function adaptSummary(
+  summary: ApiDashboardSummary,
 ): DashboardSummary {
-  const today = calendarKey(now);
-  const monthStart = `${today.slice(0, 7)}-01`;
-
-  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
-  const weekStart = shiftDay(today, -((weekday + 6) % 7));
-  const periodStart = shiftDay(today, -29);
-
-  const datedEvents = events.flatMap(event => {
-    const date = occurrence(event);
-
-    return date
-      ? [{ event, date, key: calendarKey(date) }]
-      : [];
-  });
-
-  const inRange = (key: string, start: string) =>
-    key >= start && key <= today;
-
-  const dailyCounts = new Map<string, number>();
-  const typeCounts = new Map<string, number>();
-
-  for (const item of datedEvents) {
-    if (!inRange(item.key, periodStart)) continue;
-
-    dailyCounts.set(
-      item.key,
-      (dailyCounts.get(item.key) ?? 0) + 1,
-    );
-
-    const type = item.event.tipo_evento;
-
-    typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
-  }
-
-  const evolution = Array.from({ length: 30 }, (_, index) => {
-    const date = shiftDay(periodStart, index);
-
-    return {
-      date,
-      label: shortDate(date),
-      value: dailyCounts.get(date) ?? 0,
-    };
-  });
-
-  const byType = [...typeCounts.entries()]
-    .sort(([typeA, countA], [typeB, countB]) =>
-      countB - countA || typeA.localeCompare(typeB),
-    )
-    .map(([type, value]) => ({
-      label: typeLabel(type),
-      value,
-      color: colors[
-        [...type].reduce(
-          (total, character) => total + character.charCodeAt(0),
-          0,
-        ) % colors.length
-      ],
-    }));
-
-  const recentEvents = [...datedEvents]
-    .sort((a, b) =>
-      b.date.getTime() - a.date.getTime() ||
-      b.event.id - a.event.id,
-    )
-    .slice(0, 5)
-    .map(item => toTableEvent(item.event));
-
   return {
-    month: datedEvents.filter(item =>
-      inRange(item.key, monthStart),
-    ).length,
-    week: datedEvents.filter(item =>
-      inRange(item.key, weekStart),
-    ).length,
-    today: datedEvents.filter(item => item.key === today).length,
-    open: events.filter(event => event.estado === 'abierto').length,
-    evolution,
-    byType,
-    recentEvents,
-    withoutOccurrence: events.length - datedEvents.length,
+    area: summary.area,
+    generatedAt: summary.generado_en,
+    month: summary.eventos_mes,
+    week: summary.eventos_semana,
+    today: summary.eventos_hoy,
+    open: summary.eventos_abiertos,
+
+    evolution: summary.evolucion_diaria.map(item => ({
+      date: item.fecha,
+      label: shortDate(item.fecha),
+      value: item.cantidad,
+    })),
+
+    byType: summary.distribucion_por_tipo
+      .filter(item => item.cantidad > 0)
+      .sort(
+        (a, b) =>
+          b.cantidad - a.cantidad ||
+          a.tipo_evento.localeCompare(b.tipo_evento),
+      )
+      .map(item => ({
+        label: typeLabel(item.tipo_evento),
+        value: item.cantidad,
+        color: typeColor(item.tipo_evento),
+      })),
+
+    // Conservamos el orden y la selección definidos por backend.
+    recentEvents: summary.ultimos_eventos.map(toTableEvent),
   };
 }
 
@@ -190,8 +151,12 @@ export async function getDashboard(
   accessToken: string,
   signal: AbortSignal,
 ): Promise<DashboardSummary> {
+  const query = new URLSearchParams({
+    area: 'videoseguridad',
+  });
+
   const response = await fetch(
-    `${API_URL}/eventos/?area=videoseguridad`,
+    `${API_URL}/dashboard/resumen?${query.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -201,30 +166,28 @@ export async function getDashboard(
   );
 
   if (!response.ok) {
-    const message =
-      response.status === 401
-        ? 'Tu sesión venció. Volvé a ingresar.'
-        : response.status === 403
-          ? 'No tenés permiso para consultar estos eventos.'
-          : 'No pudimos cargar el panel. Intentá nuevamente.';
+    const messages: Record<number, string> = {
+      401: 'Tu sesión venció. Volvé a ingresar.',
+      403: 'No tenés permiso para consultar el panel de esta área.',
+      404: 'El resumen del panel no está disponible.',
+      422: 'No pudimos consultar el panel con los parámetros enviados.',
+    };
 
-    throw new DashboardError(message, response.status);
-  }
-
-  const events: ApiEvent[] = await response.json();
-
-  // No presentar un estado desconocido como si fuera "cerrado".
-  if (
-    events.some(event =>
-      event.estado !== 'abierto' && event.estado !== 'cerrado',
-    )
-  ) {
-    throw new Error(
-      'Hay eventos con estados no compatibles. Deben revisarse en el sistema.',
+    throw new DashboardError(
+      messages[response.status] ??
+        'No pudimos cargar el panel. Intentá nuevamente.',
+      response.status,
     );
   }
 
-  return calculateSummary(
-    events.filter(event => event.area === 'videoseguridad'),
-  );
+  const summary: ApiDashboardSummary = await response.json();
+
+  if (summary.area !== 'videoseguridad') {
+    throw new DashboardError(
+      'El resumen recibido no corresponde al Centro de Monitoreo.',
+      response.status,
+    );
+  }
+
+  return adaptSummary(summary);
 }

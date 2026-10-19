@@ -17,6 +17,7 @@ import type {
 import './ControlPanel.scss';
 import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
 import type { User } from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 type PanelSection = 'eventos' | 'mapa' | 'reportes';
 
@@ -30,6 +31,7 @@ interface ControlPanelProps {
 const statusClasses: Record<EventStatus, string> = {
   Abierto: 'open',
   Cerrado: 'closed',
+  Anulado: 'cancelled',
 };
 
 function EvolutionChart({ data }: { data: DailyCount[] }) {
@@ -298,12 +300,23 @@ export default function ControlPanel({
               Actualizar datos
             </button>
 
-            {data.withoutOccurrence > 0 && (
-              <p>
-                {data.withoutOccurrence} evento(s) sin fecha de ocurrencia
-                no se incluyen en las estadísticas por período ni en
-                la tabla de últimos eventos.
-              </p>
+            {data && (
+              <div className="control-panel__feedback">
+                <button type="button" onClick={refresh}>
+                  Actualizar datos
+                </button>
+
+                <p>
+                  Datos actualizados al{' '}
+                  <time dateTime={data.generatedAt}>
+                    {new Intl.DateTimeFormat('es-AR', {
+                      timeZone: 'America/Argentina/Buenos_Aires',
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    }).format(new Date(data.generatedAt))}
+                  </time>
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -346,7 +359,9 @@ export default function ControlPanel({
           aria-labelledby="recent-events-title"
         >
           <div className="events-table__heading">
-            <h2 id="recent-events-title">Últimos eventos</h2>
+            <h2 id="recent-events-title">
+              Últimos eventos ocurridos
+            </h2>
 
             <button
               type="button"
@@ -372,20 +387,24 @@ export default function ControlPanel({
                   <th scope="col">Ubicación</th>
                   <th scope="col">Servicio</th>
                   <th scope="col">Estado</th>
+                  <th scope="col">Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
                 {data && recentEvents.length === 0 && (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       No hay eventos con fecha de ocurrencia para mostrar.
                     </td>
                   </tr>
                 )}
                 {recentEvents.map(event => (
                   <tr key={event.id}>
-                    <td>{event.title}</td>
+                    <td>
+                      <strong>Evento N.º {event.number}</strong>
+                      <div>{event.title}</div>
+                    </td>
                     <td>{event.type}</td>
 
                     <td>
@@ -410,6 +429,16 @@ export default function ControlPanel({
                       >
                         {event.status}
                       </span>
+                    </td>
+
+                    <td>
+                      <Link
+                        to={`/eventos/${event.id}`}
+                        className="events-table__detail"
+                        aria-label={`Ver detalle del evento número ${event.number}`}
+                      >
+                        Ver detalle
+                      </Link>
                     </td>
                   </tr>
                 ))}
