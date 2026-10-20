@@ -5,6 +5,8 @@ import './Events.scss';
 import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
 import { Link } from 'react-router-dom';
 import type { User } from '../../hooks/useAuth';
+import { Download } from 'lucide-react';
+import { exportEventsCsv } from '../../utils/exportEventsCsv';
 
 interface EventsProps {
   accessToken: string;
@@ -99,6 +101,9 @@ export default function Events({
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [address, setAddress] = useState('');
 
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
@@ -109,6 +114,8 @@ export default function Events({
       setSessionExpired(false);
       setEvents([]);
       setSelected(new Set());
+      setExportError(null);
+      setExportMessage(null);
       setPage(1);
 
       try {
@@ -149,6 +156,8 @@ export default function Events({
     update();
     setPage(1);
     setSelected(new Set());
+    setExportError(null);
+    setExportMessage(null);
   }
 
   function clearFilters() {
@@ -225,7 +234,35 @@ export default function Events({
     filtered.length > 0 &&
     filtered.every(event => selected.has(event.id));
 
+  const selectedEvents = filtered.filter(event =>
+    selected.has(event.id),
+  );
+
+  function handleExport() {
+    setExportError(null);
+    setExportMessage(null);
+
+    if (isLoading || error || invalidDates) return;
+
+    try {
+      exportEventsCsv(selectedEvents);
+
+      setExportMessage(
+        `Se solicitó la descarga de ${selectedEvents.length} evento(s).`,
+      );
+    } catch (err: unknown) {
+      setExportError(
+        err instanceof Error
+          ? err.message
+          : 'No pudimos generar el archivo. Intentá nuevamente.',
+      );
+    }
+  }
+
   function toggleSelection(id: number) {
+    setExportError(null);
+    setExportMessage(null);
+
     setSelected(previous => {
       const next = new Set(previous);
 
@@ -237,6 +274,9 @@ export default function Events({
   }
 
   function toggleAll() {
+    setExportError(null);
+    setExportMessage(null);
+
     setSelected(
       allSelected
         ? new Set()
@@ -421,19 +461,44 @@ export default function Events({
             </section>
 
             <div className="events-page__selection">
-              <button
-                type="button"
-                onClick={toggleAll}
-                disabled={filtered.length === 0}
-              >
-                {allSelected
-                  ? 'Quitar selección'
-                  : 'Seleccionar todos los resultados'}
-              </button>
+              <div className="events-page__selection-actions">
+                <button
+                  type="button"
+                  onClick={toggleAll}
+                  disabled={filtered.length === 0}
+                >
+                  {allSelected
+                    ? 'Quitar selección'
+                    : 'Seleccionar todos los resultados'}
+                </button>
+
+                <button
+                  type="button"
+                  className="events-page__export"
+                  onClick={handleExport}
+                  disabled={selectedEvents.length === 0}
+                >
+                  <Download aria-hidden="true" />
+                  Exportar seleccionados ({selectedEvents.length})
+                </button>
+              </div>
+
               <p>
                 La selección incluye los resultados de todas las páginas.
                 Al cambiar los filtros, se limpia la selección.
+                La descarga se realiza en formato CSV y las fechas
+                corresponden al horario argentino.
               </p>
+
+              {exportMessage && (
+                <p role="status">{exportMessage}</p>
+              )}
+
+              {exportError && (
+                <div className="events-page__error" role="alert">
+                  <p>{exportError}</p>
+                </div>
+              )}
             </div>
           </>
         )}
