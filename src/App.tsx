@@ -14,6 +14,7 @@ import Events from './pages/Events/Events';
 import Navbar from './components/layout/Navbar/Navbar';
 import NewEvent from './pages/NewEvent/NewEvent';
 import EventDetail from './pages/EventDetail/EventDetail';
+import EditEvent from './pages/EditEvent/EditEvent';
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -112,6 +113,23 @@ export default function App() {
               user={auth.user}
               onLogout={handleLogout}
             />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        editEvent={
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
+            auth.user.permisos.includes('eventos:write') &&
+            auth.user.areas_acceso.includes('videoseguridad') ? (
+              <EditEvent
+                key={pathname}
+                accessToken={auth.accessToken}
+                user={auth.user}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <Navigate to="/eventos" replace />
+            )
           ) : (
             <Navigate to="/login" replace />
           )

@@ -57,6 +57,13 @@ export default function EventDetail({
     event.estado === 'abierto' &&
     user.permisos.includes('eventos:write') &&
     user.areas_acceso.includes(event.area); 
+  
+  const canEdit =
+    event !== null &&
+    event.area === 'videoseguridad' &&
+    (event.estado === 'abierto' || event.estado === 'cerrado') &&
+    user.permisos.includes('eventos:write') &&
+    user.areas_acceso.includes(event.area);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,7 +84,6 @@ export default function EventDetail({
       }
 
       try {
-        // Consulta temporal: reutiliza el listado existente.
         const result = await getEvent(
           accessToken,
           eventId,
@@ -126,12 +132,23 @@ export default function EventDetail({
             <p>Centro de Monitoreo · Consulta del registro</p>
           </div>
 
-          <Link
-            to="/eventos"
-            className="event-detail__secondary"
-          >
-            Ver eventos
-          </Link>
+          <div className="event-detail__actions">
+            {!isLoading && !error && canEdit && event && (
+              <Link
+                to={`/eventos/${event.id}/editar`}
+                className="event-detail__secondary"
+              >
+                Editar evento
+              </Link>
+            )}
+
+            <Link
+              to="/eventos"
+              className="event-detail__secondary"
+            >
+              Ver eventos
+            </Link>
+          </div>
         </header>
 
         {isLoading && (

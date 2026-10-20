@@ -12,8 +12,12 @@ export interface EventRecord {
   fecha_ocurrencia: string | null;
   fecha_creacion: string;
   direccion: string | null;
+  latitud: number;
+  longitud: number;
   turno: string | null;
   servicio_actuante: string | null;
+  recibio_nombre: string | null;
+  recibio_funcion: string | null;
   fecha_cierre: string | null;
   cerrado_por_id: number | null;
   observaciones_cierre: string | null;
@@ -170,6 +174,50 @@ export async function closeEvent(
       estado: 'cerrado',
       observaciones_cierre: text,
     }),
+  });
+
+  if (!response.ok) {
+    throw requestError(response.status);
+  }
+
+  return response.json();
+}
+
+export interface UpdateEventInput {
+  descripcion?: string;
+  fecha_ocurrencia?: string;
+  direccion?: string;
+  latitud?: number;
+  longitud?: number;
+  turno?: string;
+  recibio_nombre?: string;
+  recibio_funcion?: string;
+}
+
+export async function updateEvent(
+  token: string,
+  id: number,
+  input: UpdateEventInput,
+): Promise<EventRecord> {
+  // Enumeramos los campos para enviar únicamente datos editables.
+  const body: UpdateEventInput = {
+    descripcion: input.descripcion,
+    fecha_ocurrencia: input.fecha_ocurrencia,
+    direccion: input.direccion,
+    latitud: input.latitud,
+    longitud: input.longitud,
+    turno: input.turno,
+    recibio_nombre: input.recibio_nombre,
+    recibio_funcion: input.recibio_funcion,
+  };
+
+  const response = await fetch(`${API_URL}/eventos/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
