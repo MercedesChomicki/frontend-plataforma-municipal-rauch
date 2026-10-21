@@ -1,8 +1,8 @@
-import { LogOut } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
-import municipalLogo from '../../../assets/images/logo-letras-blancas.svg';
-import './Navbar.scss';
+import municipalLogo from "../../../assets/images/logo-letras-blancas.svg";
+import "./Navbar.scss";
 
 interface NavbarProps {
   user: {
@@ -17,8 +17,8 @@ function getInitials(name: string): string {
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map(part => part.charAt(0))
-    .join('')
+    .map((part) => part.charAt(0))
+    .join("")
     .toUpperCase();
 }
 
@@ -38,7 +38,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           to="/panel"
           end
           className={({ isActive }) =>
-            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+            `navbar__link${isActive ? " navbar__link--active" : ""}`
           }
         >
           Panel de control
@@ -47,23 +47,28 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
         <NavLink
           to="/eventos"
           className={({ isActive }) =>
-            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+            `navbar__link${isActive ? " navbar__link--active" : ""}`
           }
         >
           Eventos
         </NavLink>
 
-        <span className="navbar__pending" title="Próximamente">
-          Mapa
-        </span>
-
         <NavLink
           to="/reportes"
           className={({ isActive }) =>
-            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+            `navbar__link${isActive ? " navbar__link--active" : ""}`
           }
         >
           Reportes
+        </NavLink>
+
+        <NavLink
+          to="/mapa"
+          className={({ isActive }) =>
+            `navbar__link${isActive ? " navbar__link--active" : ""}`
+          }
+        >
+          Mapa
         </NavLink>
       </nav>
 

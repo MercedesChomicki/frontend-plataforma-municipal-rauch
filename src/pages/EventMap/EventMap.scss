@@ -1,0 +1,380 @@
+.map-page {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: clamp(20px, 3vw, 40px);
+  background: #f1f3f8;
+  color: #172033;
+  color-scheme: light;
+
+  &__container {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 3vw, 36px);
+    }
+
+    p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.6;
+    }
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #172033;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: #e8edf5;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  a {
+    color: #1d4ed8;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid #b77900;
+    outline-offset: 3px;
+  }
+
+  &__filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #dce2eb;
+    border-radius: 14px;
+    background: #fff;
+
+    label {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #172033;
+    }
+  }
+
+  &__summary {
+    margin-bottom: 16px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 0;
+    margin: 0 0 12px;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+  }
+
+  &__dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+
+    &--open {
+      background: #b77900;
+    }
+
+    &--closed {
+      background: #16804a;
+    }
+
+    &--cancelled {
+      background: #b91c1c;
+    }
+  }
+
+  &__hint {
+    margin-bottom: 16px;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  &__error,
+  &__notice {
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #dce2eb;
+    border-radius: 10px;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  &__error {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #991b1b;
+
+    p {
+      margin: 0 0 12px;
+    }
+  }
+
+  &__detail,
+  &__list {
+    padding: 24px;
+    margin-top: 24px;
+    border: 1px solid #dce2eb;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  &__detail {
+    h2 {
+      margin: 0 0 20px;
+      font-size: 21px;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      margin: 0 0 24px;
+    }
+
+    dt {
+      margin-bottom: 6px;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__list {
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    ul {
+      display: grid;
+      gap: 16px;
+      padding: 0;
+      margin: 20px 0 0;
+      list-style: none;
+    }
+
+    li {
+      display: grid;
+      gap: 6px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      line-height: 1.5;
+
+      &:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      span {
+        color: #475569;
+      }
+    }
+  }
+}
+
+.events-map {
+  min-width: 0;
+
+  &__canvas {
+    // Mantiene los controles de Leaflet debajo de la navegación.
+    z-index: 0;
+    isolation: isolate;
+
+    width: 100%;
+    height: clamp(360px, 62dvh, 680px);
+
+    border: 1px solid #dce2eb;
+    border-radius: 14px;
+    background: #e2e8f0;
+
+    font-family: inherit;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    p {
+      flex: 1 1 260px;
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    button {
+      min-height: 44px;
+      padding: 10px 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: #fff;
+      color: #172033;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        background: #e8edf5;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #b77900;
+        outline-offset: 3px;
+      }
+    }
+  }
+
+  &:fullscreen {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+    background: #f1f3f8;
+    color: #172033;
+    color-scheme: light;
+
+    .events-map__toolbar {
+      flex: 0 0 auto;
+    }
+
+    .events-map__canvas {
+      flex: 1;
+      min-height: 0;
+      height: auto;
+    }
+
+    .map-page__notice {
+      flex: 0 0 auto;
+    }
+  }
+}
+
+.events-map-marker {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+
+  span {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 30%);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .map-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > button {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .map-page {
+    &__filters {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 16px;
+
+      > button {
+        justify-self: stretch;
+      }
+    }
+
+    &__detail,
+    &__list {
+      padding: 20px 16px;
+    }
+
+    &__detail dl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+}

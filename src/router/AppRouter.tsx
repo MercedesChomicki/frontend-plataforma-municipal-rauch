@@ -10,6 +10,7 @@ interface AppRouterProps {
   eventDetail: ReactElement;
   editEvent: ReactElement;
   reports: ReactElement;
+  map: ReactElement;
 }
 
 export default function AppRouter({
@@ -18,20 +19,25 @@ export default function AppRouter({
   panel,
   events,
   newEvent,
-  eventDetail, 
+  eventDetail,
   editEvent,
-  reports
+  reports,
+  map,
 }: AppRouterProps) {
   return (
     <Routes>
       <Route path="/" element={home} />
       <Route path="/login" element={login} />
       <Route path="/panel" element={panel} />
+
       <Route path="/eventos" element={events} />
       <Route path="/eventos/nuevo" element={newEvent} />
       <Route path="/eventos/:id" element={eventDetail} />
       <Route path="/eventos/:id/editar" element={editEvent} />
+
       <Route path="/reportes" element={reports} />
+      <Route path="/mapa" element={map} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
