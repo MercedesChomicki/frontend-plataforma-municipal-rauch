@@ -15,6 +15,7 @@ import Navbar from './components/layout/Navbar/Navbar';
 import NewEvent from './pages/NewEvent/NewEvent';
 import EventDetail from './pages/EventDetail/EventDetail';
 import EditEvent from './pages/EditEvent/EditEvent';
+import Reports from './pages/Reports/Reports';
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -129,6 +130,27 @@ export default function App() {
               />
             ) : (
               <Navigate to="/eventos" replace />
+            )
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        reports={
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
+            auth.user.permisos.includes('estadisticas:read') &&
+            auth.user.permisos.includes('eventos:read') &&
+            auth.user.areas_acceso.includes('videoseguridad') ? (
+              <Reports
+                accessToken={auth.accessToken}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <main className="reports-page">
+                <div className="reports-page__container">
+                  <h1>Reportes</h1>
+                  <p>No tenés permiso para consultar los reportes de COM.</p>
+                </div>
+              </main>
             )
           ) : (
             <Navigate to="/login" replace />

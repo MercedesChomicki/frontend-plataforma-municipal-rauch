@@ -9,6 +9,7 @@ interface AppRouterProps {
   newEvent: ReactElement;
   eventDetail: ReactElement;
   editEvent: ReactElement;
+  reports: ReactElement;
 }
 
 export default function AppRouter({
@@ -19,6 +20,7 @@ export default function AppRouter({
   newEvent,
   eventDetail, 
   editEvent,
+  reports
 }: AppRouterProps) {
   return (
     <Routes>
@@ -29,7 +31,7 @@ export default function AppRouter({
       <Route path="/eventos/nuevo" element={newEvent} />
       <Route path="/eventos/:id" element={eventDetail} />
       <Route path="/eventos/:id/editar" element={editEvent} />
-     
+      <Route path="/reportes" element={reports} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

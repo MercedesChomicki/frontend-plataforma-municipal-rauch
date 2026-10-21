@@ -57,9 +57,14 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           Mapa
         </span>
 
-        <span className="navbar__pending" title="Próximamente">
+        <NavLink
+          to="/reportes"
+          className={({ isActive }) =>
+            `navbar__link${isActive ? ' navbar__link--active' : ''}`
+          }
+        >
           Reportes
-        </span>
+        </NavLink>
       </nav>
 
       <div className="navbar__account">
