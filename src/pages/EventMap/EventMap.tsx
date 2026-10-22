@@ -1,20 +1,13 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
-import {
-  EventsError,
-  getEvents,
-} from '../../services/eventsService';
-import type { EventRecord } from '../../services/eventsService';
+import { EventsError, getEvents } from "../../services/eventsService";
+import type { EventRecord } from "../../services/eventsService";
 
-import EventsMap from '../../components/maps/EventsMap/EventsMap';
+import EventsMap from "../../components/maps/EventsMap/EventsMap";
+import type { MapView } from "../../components/maps/EventsMap/EventsMap";
 
-import './EventMap.scss';
+import "./EventMap.scss";
 
 interface EventMapProps {
   accessToken: string;
@@ -29,27 +22,27 @@ interface Filters {
 }
 
 const EMPTY_FILTERS: Filters = {
-  from: '',
-  to: '',
-  type: '',
-  status: '',
+  from: "",
+  to: "",
+  type: "",
+  status: "",
 };
 
-const calendarFormatter = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Argentina/Buenos_Aires',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
+const calendarFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Argentina/Buenos_Aires",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
 });
 
-const dateFormatter = new Intl.DateTimeFormat('es-AR', {
-  timeZone: 'America/Argentina/Buenos_Aires',
-  dateStyle: 'short',
-  timeStyle: 'short',
+const dateFormatter = new Intl.DateTimeFormat("es-AR", {
+  timeZone: "America/Argentina/Buenos_Aires",
+  dateStyle: "short",
+  timeStyle: "short",
 });
 
 function label(value: string): string {
-  const text = value.replace(/_/g, ' ');
+  const text = value.replace(/_/g, " ");
 
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -64,25 +57,25 @@ function occurrenceDay(value: string | null): string | null {
   const parts = calendarFormatter.formatToParts(date);
 
   const get = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '';
+    parts.find((part) => part.type === type)?.value ?? "";
 
-  return `${get('year')}-${get('month')}-${get('day')}`;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return 'Sin información';
+  if (!value) return "Sin información";
 
   const date = new Date(value);
 
   return Number.isNaN(date.getTime())
-    ? 'Sin información'
+    ? "Sin información"
     : dateFormatter.format(date);
 }
 
 function hasCoordinates(event: EventRecord): boolean {
   return (
-    typeof event.latitud === 'number' &&
-    typeof event.longitud === 'number' &&
+    typeof event.latitud === "number" &&
+    typeof event.longitud === "number" &&
     Number.isFinite(event.latitud) &&
     Number.isFinite(event.longitud) &&
     event.latitud >= -90 &&
@@ -93,10 +86,7 @@ function hasCoordinates(event: EventRecord): boolean {
   );
 }
 
-export default function EventMap({
-  accessToken,
-  onLogout,
-}: EventMapProps) {
+export default function EventMap({ accessToken, onLogout }: EventMapProps) {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 
@@ -106,6 +96,7 @@ export default function EventMap({
   const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [version, setVersion] = useState(0);
+  const [view, setView] = useState<MapView>("events");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -119,10 +110,7 @@ export default function EventMap({
       setSelectedId(null);
 
       try {
-        const result = await getEvents(
-          accessToken,
-          controller.signal,
-        );
+        const result = await getEvents(accessToken, controller.signal);
 
         if (active) {
           setEvents(result);
@@ -130,14 +118,12 @@ export default function EventMap({
       } catch (err: unknown) {
         if (!active) return;
 
-        setSessionExpired(
-          err instanceof EventsError && err.status === 401,
-        );
+        setSessionExpired(err instanceof EventsError && err.status === 401);
 
         setError(
           err instanceof EventsError
             ? err.message
-            : 'No pudimos cargar los eventos del mapa. Revisá tu conexión e intentá nuevamente.',
+            : "No pudimos cargar los eventos del mapa. Revisá tu conexión e intentá nuevamente.",
         );
       } finally {
         if (active) setIsLoading(false);
@@ -154,21 +140,20 @@ export default function EventMap({
 
   const types = useMemo(
     () =>
-      [...new Set(events.map(event => event.tipo_evento))]
-        .sort((a, b) => a.localeCompare(b, 'es')),
+      [...new Set(events.map((event) => event.tipo_evento))].sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
     [events],
   );
 
   const invalidRange = Boolean(
-    filters.from &&
-    filters.to &&
-    filters.from > filters.to,
+    filters.from && filters.to && filters.from > filters.to,
   );
 
   const filtered = useMemo(() => {
     if (invalidRange) return [];
 
-    return events.filter(event => {
+    return events.filter((event) => {
       if (filters.type && event.tipo_evento !== filters.type) {
         return false;
       }
@@ -194,21 +179,17 @@ export default function EventMap({
     [filtered],
   );
 
-  const missingCoordinates =
-    filtered.length - locatedEvents.length;
+  const missingCoordinates = filtered.length - locatedEvents.length;
 
   const selectedEvent =
-    locatedEvents.find(event => event.id === selectedId) ?? null;
+    locatedEvents.find((event) => event.id === selectedId) ?? null;
 
   const selectEvent = useCallback((event: EventRecord) => {
     setSelectedId(event.id);
   }, []);
 
-  function changeFilter(
-    field: keyof Filters,
-    value: string,
-  ) {
-    setFilters(current => ({
+  function changeFilter(field: keyof Filters, value: string) {
+    setFilters((current) => ({
       ...current,
       [field]: value,
     }));
@@ -223,23 +204,21 @@ export default function EventMap({
           <div>
             <h1>Mapa de eventos</h1>
             <p>
-              Centro de Monitoreo · Ubicación de los eventos
-              según su fecha de ocurrencia.
+              Centro de Monitoreo · Ubicación de los eventos según su fecha de
+              ocurrencia.
             </p>
           </div>
 
           <button
             type="button"
             disabled={isLoading || sessionExpired}
-            onClick={() => setVersion(current => current + 1)}
+            onClick={() => setVersion((current) => current + 1)}
           >
-            {isLoading ? 'Actualizando…' : 'Actualizar datos'}
+            {isLoading ? "Actualizando…" : "Actualizar datos"}
           </button>
         </header>
 
-        {isLoading && (
-          <p role="status">Cargando eventos…</p>
-        )}
+        {isLoading && <p role="status">Cargando eventos…</p>}
 
         {error && (
           <div className="map-page__error" role="alert">
@@ -250,10 +229,10 @@ export default function EventMap({
               onClick={
                 sessionExpired
                   ? onLogout
-                  : () => setVersion(current => current + 1)
+                  : () => setVersion((current) => current + 1)
               }
             >
-              {sessionExpired ? 'Volver al login' : 'Reintentar'}
+              {sessionExpired ? "Volver al login" : "Reintentar"}
             </button>
           </div>
         )}
@@ -270,9 +249,7 @@ export default function EventMap({
                   type="date"
                   value={filters.from}
                   max={filters.to || undefined}
-                  onChange={e =>
-                    changeFilter('from', e.target.value)
-                  }
+                  onChange={(e) => changeFilter("from", e.target.value)}
                 />
               </label>
 
@@ -282,9 +259,7 @@ export default function EventMap({
                   type="date"
                   value={filters.to}
                   min={filters.from || undefined}
-                  onChange={e =>
-                    changeFilter('to', e.target.value)
-                  }
+                  onChange={(e) => changeFilter("to", e.target.value)}
                 />
               </label>
 
@@ -292,13 +267,11 @@ export default function EventMap({
                 Tipo de evento
                 <select
                   value={filters.type}
-                  onChange={e =>
-                    changeFilter('type', e.target.value)
-                  }
+                  onChange={(e) => changeFilter("type", e.target.value)}
                 >
                   <option value="">Todos</option>
 
-                  {types.map(type => (
+                  {types.map((type) => (
                     <option key={type} value={type}>
                       {label(type)}
                     </option>
@@ -310,9 +283,7 @@ export default function EventMap({
                 Estado
                 <select
                   value={filters.status}
-                  onChange={e =>
-                    changeFilter('status', e.target.value)
-                  }
+                  onChange={(e) => changeFilter("status", e.target.value)}
                 >
                   <option value="">Todos</option>
                   <option value="abierto">Abierto</option>
@@ -339,38 +310,46 @@ export default function EventMap({
             )}
 
             <p className="map-page__summary" role="status">
-              {locatedEvents.length} eventos ubicados de{' '}
-              {filtered.length} resultados.
+              {locatedEvents.length} eventos ubicados de {filtered.length}{" "}
+              resultados.
               {missingCoordinates > 0 && (
-                <>
-                  {' '}{missingCoordinates} sin coordenadas válidas.
-                </>
+                <> {missingCoordinates} sin coordenadas válidas.</>
               )}
             </p>
 
-            <ul className="map-page__legend" aria-label="Estados">
-              <li>
-                <span className="map-page__dot map-page__dot--open" />
-                Abierto
-              </li>
-              <li>
-                <span className="map-page__dot map-page__dot--closed" />
-                Cerrado
-              </li>
-              <li>
-                <span className="map-page__dot map-page__dot--cancelled" />
-                Anulado
-              </li>
-            </ul>
+            {view === "events" && (
+              <>
+                <ul className="map-page__legend" aria-label="Estados">
+                  <li>
+                    <span className="map-page__dot map-page__dot--open" />
+                    Abierto
+                  </li>
 
-            <p className="map-page__hint">
-              Seleccioná un punto para consultar el evento.
-              Los círculos numerados agrupan eventos cercanos;
-              presionalos para ampliar.
-            </p>
+                  <li>
+                    <span className="map-page__dot map-page__dot--closed" />
+                    Cerrado
+                  </li>
+
+                  <li>
+                    <span className="map-page__dot map-page__dot--cancelled" />
+                    Anulado
+                  </li>
+                </ul>
+
+                <p className="map-page__hint">
+                  Seleccioná un punto para consultar el evento. Los círculos
+                  numerados agrupan eventos cercanos; presionalos para ampliar.
+                </p>
+              </>
+            )}
 
             <EventsMap
               events={locatedEvents}
+              view={view}
+              onViewChange={(nextView) => {
+                setView(nextView);
+                setSelectedId(null);
+              }}
               onSelect={selectEvent}
             />
 
@@ -382,12 +361,12 @@ export default function EventMap({
 
             {filtered.length > 0 && locatedEvents.length === 0 && (
               <p className="map-page__notice">
-                Los resultados no tienen coordenadas válidas para
-                mostrarse en el mapa.
+                Los resultados no tienen coordenadas válidas para mostrarse en
+                el mapa.
               </p>
             )}
 
-            {selectedEvent && (
+            {view === "events" && selectedEvent && (
               <section
                 className="map-page__detail"
                 aria-labelledby="map-event-heading"
@@ -410,16 +389,12 @@ export default function EventMap({
 
                   <div>
                     <dt>Fecha y hora de ocurrencia</dt>
-                    <dd>
-                      {formatDate(selectedEvent.fecha_ocurrencia)}
-                    </dd>
+                    <dd>{formatDate(selectedEvent.fecha_ocurrencia)}</dd>
                   </div>
 
                   <div>
                     <dt>Dirección</dt>
-                    <dd>
-                      {selectedEvent.direccion || 'Sin información'}
-                    </dd>
+                    <dd>{selectedEvent.direccion || "Sin información"}</dd>
                   </div>
                 </dl>
 
@@ -438,22 +413,21 @@ export default function EventMap({
                 <p>No hay resultados.</p>
               ) : (
                 <ul>
-                  {filtered.map(event => (
+                  {filtered.map((event) => (
                     <li key={event.id}>
                       <Link to={`/eventos/${event.id}`}>
                         Evento N.º {event.numero_evento}
                       </Link>
 
                       <span>
-                        {label(event.tipo_evento)} ·{' '}
-                        {formatDate(event.fecha_ocurrencia)} ·{' '}
+                        {label(event.tipo_evento)} ·{" "}
+                        {formatDate(event.fecha_ocurrencia)} ·{" "}
                         {label(event.estado)}
                       </span>
 
                       <span>
-                        {event.direccion || 'Sin dirección'}
-                        {!hasCoordinates(event) &&
-                          ' · Sin coordenadas válidas'}
+                        {event.direccion || "Sin dirección"}
+                        {!hasCoordinates(event) && " · Sin coordenadas válidas"}
                       </span>
                     </li>
                   ))}

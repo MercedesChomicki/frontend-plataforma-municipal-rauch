@@ -8,8 +8,14 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import type { EventRecord } from "../../../services/eventsService";
 
+import "leaflet.heat";
+
+export type MapView = "events" | "heat";
+
 interface EventsMapProps {
   events: EventRecord[];
+  view: MapView;
+  onViewChange: (view: MapView) => void;
   onSelect: (event: EventRecord) => void;
 }
 
@@ -28,10 +34,16 @@ function markerColor(status: string): string {
   }
 }
 
-export default function EventsMap({ events, onSelect }: EventsMapProps) {
+export default function EventsMap({
+  events,
+  view,
+  onViewChange,
+  onSelect,
+}: EventsMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const heatRef = useRef<L.HeatLayer | null>(null);
 
   const [tilesError, setTilesError] = useState(false);
 
@@ -101,10 +113,24 @@ export default function EventsMap({ events, onSelect }: EventsMapProps) {
       maxClusterRadius: 45,
     });
 
-    clusters.addTo(map);
+    const heat = L.heatLayer([], {
+      radius: 28,
+      blur: 22,
+      minOpacity: 0.2,
+      maxZoom: 16,
+      max: 5,
+      gradient: {
+        0.2: "#2563eb",
+        0.4: "#06b6d4",
+        0.6: "#22c55e",
+        0.8: "#facc15",
+        1: "#ef4444",
+      },
+    });
 
     mapRef.current = map;
     clusterRef.current = clusters;
+    heatRef.current = heat;
 
     const observer = new ResizeObserver(() => {
       map.invalidateSize();
@@ -113,23 +139,50 @@ export default function EventsMap({ events, onSelect }: EventsMapProps) {
     observer.observe(containerRef.current);
 
     return () => {
-      container.removeEventListener('wheel', handleWheel, true);
-      
+      container.removeEventListener("wheel", handleWheel, true);
+
       observer.disconnect();
       map.remove();
 
       mapRef.current = null;
       clusterRef.current = null;
+      heatRef.current = null;
     };
   }, []);
 
+  // Actualiza los datos y muestra la capa correspondiente.
   useEffect(() => {
     const map = mapRef.current;
     const clusters = clusterRef.current;
+    const heat = heatRef.current;
 
-    if (!map || !clusters) return;
+    if (!map || !clusters || !heat) return;
+
+    if (map.hasLayer(clusters)) {
+      map.removeLayer(clusters);
+    }
+
+    if (map.hasLayer(heat)) {
+      map.removeLayer(heat);
+    }
 
     clusters.clearLayers();
+
+    if (view === "heat") {
+      const heatPoints: L.HeatLatLngTuple[] = events.map((event) => [
+        event.latitud,
+        event.longitud,
+        1,
+      ]);
+
+      // Primero conectamos la capa al mapa.
+      heat.addTo(map);
+
+      // Después actualizamos sus datos.
+      heat.setLatLngs(heatPoints);
+
+      return;
+    }
 
     for (const event of events) {
       const color = markerColor(event.estado);
@@ -148,7 +201,6 @@ export default function EventsMap({ events, onSelect }: EventsMapProps) {
         alt: `Evento N.º ${event.numero_evento}`,
       });
 
-      // textContent evita interpretar datos del evento como HTML.
       const tooltip = document.createElement("span");
 
       tooltip.textContent =
@@ -164,15 +216,30 @@ export default function EventsMap({ events, onSelect }: EventsMapProps) {
       clusters.addLayer(marker);
     }
 
-    if (events.length > 0) {
-      map.fitBounds(clusters.getBounds(), {
-        padding: [40, 40],
-        maxZoom: 16,
-      });
-    } else {
+    clusters.addTo(map);
+  }, [events, view, onSelect]);
+
+  // Ajusta el encuadre al cambiar los resultados.
+  // Cambiar de vista conserva la posición y el zoom.
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) return;
+
+    if (events.length === 0) {
       map.setView(RAUCH_CENTER, 14);
+      return;
     }
-  }, [events, onSelect]);
+
+    const bounds = L.latLngBounds(
+      events.map((event): L.LatLngTuple => [event.latitud, event.longitud]),
+    );
+
+    map.fitBounds(bounds, {
+      padding: [40, 40],
+      maxZoom: 16,
+    });
+  }, [events]);
 
   useEffect(() => {
     function handleFullscreenChange() {
@@ -214,10 +281,51 @@ export default function EventsMap({ events, onSelect }: EventsMapProps) {
 
   return (
     <div ref={wrapperRef} className="events-map">
+      <div
+        className="events-map__views"
+        role="group"
+        aria-label="Vista del mapa"
+      >
+        <button
+          type="button"
+          aria-pressed={view === "events"}
+          onClick={() => onViewChange("events")}
+        >
+          Eventos
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={view === "heat"}
+          onClick={() => onViewChange("heat")}
+        >
+          Mapa de calor
+        </button>
+      </div>
+
+      {view === "heat" && (
+        <div className="events-map__heat-legend">
+          <strong>Concentración de eventos</strong>
+
+          <div className="events-map__heat-scale" aria-hidden="true" />
+
+          <div className="events-map__heat-labels">
+            <span>Menor concentración</span>
+            <span>Mayor concentración</span>
+          </div>
+
+          <p>
+            Cada evento tiene el mismo peso. Los colores representan
+            concentración de registros, no niveles de peligrosidad. La
+            apariencia cambia con el zoom.
+          </p>
+        </div>
+      )}
       <div className="events-map__toolbar">
         <p>
-          Arrastrá o deslizá dos dedos sobre el mousepad para desplazarte. Usá la rueda del mouse o el gesto de
-          desplazamiento del mousepad para acercar y alejar.
+          Arrastrá o deslizá dos dedos sobre el mousepad para desplazarte. Usá
+          la rueda del mouse o el gesto de desplazamiento del mousepad para
+          acercar y alejar.
         </p>
 
         <button
