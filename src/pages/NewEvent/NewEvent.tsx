@@ -1,19 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import {
   createEvent,
   EventsError,
   getEventTypes,
-} from '../../services/eventsService';
+} from "../../services/eventsService";
 
-import type {
-  EventRecord,
-  EventType,
-} from '../../services/eventsService';
+import type { EventRecord, EventType } from "../../services/eventsService";
 
-import './NewEvent.scss';
+import LocationPicker from "../../components/maps/LocationPicker/LocationPicker";
+import type { LocationValue } from "../../components/maps/LocationPicker/LocationPicker";
+
+import "./NewEvent.scss";
 
 interface NewEventProps {
   accessToken: string;
@@ -33,26 +33,23 @@ interface FormValues {
 }
 
 const initialValues: FormValues = {
-  typeId: '',
-  occurrence: '',
-  description: '',
-  address: '',
-  latitude: '',
-  longitude: '',
-  shift: '',
-  receivedBy: '',
-  receivedRole: '',
+  typeId: "",
+  occurrence: "",
+  description: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+  shift: "",
+  receivedBy: "",
+  receivedRole: "",
 };
 
 function displayLabel(value: string): string {
-  const text = value.replace(/_/g, ' ');
+  const text = value.replace(/_/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export default function NewEvent({
-  accessToken,
-  onLogout,
-}: NewEventProps) {
+export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
   const [values, setValues] = useState<FormValues>(initialValues);
   const [types, setTypes] = useState<EventType[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -75,23 +72,18 @@ export default function NewEvent({
       setSessionExpired(false);
 
       try {
-        const result = await getEventTypes(
-          accessToken,
-          controller.signal,
-        );
+        const result = await getEventTypes(accessToken, controller.signal);
 
         if (active) setTypes(result);
       } catch (err: unknown) {
         if (!active) return;
 
-        setSessionExpired(
-          err instanceof EventsError && err.status === 401,
-        );
+        setSessionExpired(err instanceof EventsError && err.status === 401);
 
         setCatalogError(
           err instanceof EventsError
             ? err.message
-            : 'No pudimos cargar los tipos de evento.',
+            : "No pudimos cargar los tipos de evento.",
         );
       } finally {
         if (active) setLoadingTypes(false);
@@ -107,7 +99,19 @@ export default function NewEvent({
   }, [accessToken, version]);
 
   function update(field: keyof FormValues, value: string) {
-    setValues(previous => ({ ...previous, [field]: value }));
+    setValues((previous) => ({ ...previous, [field]: value }));
+    setError(null);
+  }
+
+  function updateLocation(location: LocationValue) {
+    if (saving || sessionExpired) return;
+
+    setValues((previous) => ({
+      ...previous,
+      latitude: String(location.latitude),
+      longitude: String(location.longitude),
+    }));
+
     setError(null);
   }
 
@@ -120,16 +124,13 @@ export default function NewEvent({
     const latitude = Number(values.latitude);
     const longitude = Number(values.longitude);
 
-    if (
-      !values.typeId ||
-      !types.some(type => type.id === typeId)
-    ) {
-      setError('Seleccioná un tipo de evento disponible.');
+    if (!values.typeId || !types.some((type) => type.id === typeId)) {
+      setError("Seleccioná un tipo de evento disponible.");
       return;
     }
 
     if (!values.occurrence) {
-      setError('Ingresá la fecha y hora de ocurrencia.');
+      setError("Ingresá la fecha y hora de ocurrencia.");
       return;
     }
 
@@ -137,7 +138,7 @@ export default function NewEvent({
     const occurrence = `${values.occurrence}:00-03:00`;
 
     if (Number.isNaN(new Date(occurrence).getTime())) {
-      setError('La fecha y hora de ocurrencia no son válidas.');
+      setError("La fecha y hora de ocurrencia no son válidas.");
       return;
     }
 
@@ -149,14 +150,15 @@ export default function NewEvent({
       latitude < -90 ||
       latitude > 90 ||
       longitude < -180 ||
-      longitude > 180
+      longitude > 180 ||
+      (latitude === 0 && longitude === 0)
     ) {
-      setError('Ingresá coordenadas válidas para la ubicación.');
+      setError("Ingresá coordenadas válidas para la ubicación.");
       return;
     }
 
     if (!values.description.trim() || !values.address.trim()) {
-      setError('Completá la descripción y la dirección.');
+      setError("Completá la descripción y la dirección.");
       return;
     }
 
@@ -168,8 +170,8 @@ export default function NewEvent({
       const result = await createEvent(accessToken, {
         tipo_evento_id: typeId,
         descripcion: values.description.trim(),
-        fuente: 'manual',
-        estado: 'abierto',
+        fuente: "manual",
+        estado: "abierto",
         fecha_ocurrencia: occurrence,
         latitud: latitude,
         longitud: longitude,
@@ -181,14 +183,12 @@ export default function NewEvent({
 
       setCreated(result);
     } catch (err: unknown) {
-      setSessionExpired(
-        err instanceof EventsError && err.status === 401,
-      );
+      setSessionExpired(err instanceof EventsError && err.status === 401);
 
       setError(
         err instanceof EventsError
           ? err.message
-          : 'No pudimos confirmar el guardado. Consultá el listado antes de volver a enviar para evitar duplicados.',
+          : "No pudimos confirmar el guardado. Consultá el listado antes de volver a enviar para evitar duplicados.",
       );
     } finally {
       submitting.current = false;
@@ -202,8 +202,7 @@ export default function NewEvent({
         <section className="new-event__success" role="status">
           <h1>Evento registrado</h1>
           <p>
-            Se guardó el evento número{' '}
-            <strong>{created.numero_evento}</strong>.
+            Se guardó el evento número <strong>{created.numero_evento}</strong>.
           </p>
           <Link className="new-event__primary" to="/eventos">
             Ver eventos
@@ -221,14 +220,12 @@ export default function NewEvent({
           <p>Centro de Monitoreo · Nuevo registro</p>
         </div>
 
-        {!saving && (
-          <Link to="/eventos">Ver eventos</Link>
-        )}
+        {!saving && <Link to="/eventos">Ver eventos</Link>}
       </div>
 
       <p className="new-event__note">
-        El número se asignará al guardar. El evento se creará abierto.
-        Las fechas se ingresan en horario argentino.
+        El número se asignará al guardar. El evento se creará abierto. Las
+        fechas se ingresan en horario argentino.
       </p>
 
       {catalogError && (
@@ -237,12 +234,10 @@ export default function NewEvent({
           <button
             type="button"
             onClick={
-              sessionExpired
-                ? onLogout
-                : () => setVersion(value => value + 1)
+              sessionExpired ? onLogout : () => setVersion((value) => value + 1)
             }
           >
-            {sessionExpired ? 'Volver al login' : 'Reintentar'}
+            {sessionExpired ? "Volver al login" : "Reintentar"}
           </button>
         </div>
       )}
@@ -271,12 +266,12 @@ export default function NewEvent({
               <select
                 required
                 value={values.typeId}
-                onChange={event => update('typeId', event.target.value)}
+                onChange={(event) => update("typeId", event.target.value)}
               >
                 <option value="">
-                  {loadingTypes ? 'Cargando tipos…' : 'Seleccionar'}
+                  {loadingTypes ? "Cargando tipos…" : "Seleccionar"}
                 </option>
-                {types.map(type => (
+                {types.map((type) => (
                   <option key={type.id} value={type.id}>
                     {displayLabel(type.nombre)}
                   </option>
@@ -291,9 +286,7 @@ export default function NewEvent({
                 required
                 step="60"
                 value={values.occurrence}
-                onChange={event =>
-                  update('occurrence', event.target.value)
-                }
+                onChange={(event) => update("occurrence", event.target.value)}
               />
             </label>
 
@@ -301,7 +294,7 @@ export default function NewEvent({
               Turno
               <select
                 value={values.shift}
-                onChange={event => update('shift', event.target.value)}
+                onChange={(event) => update("shift", event.target.value)}
               >
                 <option value="">Seleccionar</option>
                 <option value="matutino">Matutino</option>
@@ -316,9 +309,7 @@ export default function NewEvent({
                 required
                 rows={4}
                 value={values.description}
-                onChange={event =>
-                  update('description', event.target.value)
-                }
+                onChange={(event) => update("description", event.target.value)}
               />
             </label>
           </div>
@@ -334,9 +325,18 @@ export default function NewEvent({
                 required
                 type="text"
                 value={values.address}
-                onChange={event => update('address', event.target.value)}
+                onChange={(event) => update("address", event.target.value)}
               />
             </label>
+
+            <div className="new-event__wide">
+              <LocationPicker
+                latitude={values.latitude}
+                longitude={values.longitude}
+                disabled={saving || sessionExpired}
+                onChange={updateLocation}
+              />
+            </div>
 
             <label>
               Latitud *
@@ -347,9 +347,7 @@ export default function NewEvent({
                 min="-90"
                 max="90"
                 value={values.latitude}
-                onChange={event =>
-                  update('latitude', event.target.value)
-                }
+                onChange={(event) => update("latitude", event.target.value)}
               />
             </label>
 
@@ -362,9 +360,7 @@ export default function NewEvent({
                 min="-180"
                 max="180"
                 value={values.longitude}
-                onChange={event =>
-                  update('longitude', event.target.value)
-                }
+                onChange={(event) => update("longitude", event.target.value)}
               />
             </label>
           </div>
@@ -379,9 +375,7 @@ export default function NewEvent({
               <input
                 type="text"
                 value={values.receivedBy}
-                onChange={event =>
-                  update('receivedBy', event.target.value)
-                }
+                onChange={(event) => update("receivedBy", event.target.value)}
               />
             </label>
 
@@ -390,9 +384,7 @@ export default function NewEvent({
               <input
                 type="text"
                 value={values.receivedRole}
-                onChange={event =>
-                  update('receivedRole', event.target.value)
-                }
+                onChange={(event) => update("receivedRole", event.target.value)}
               />
             </label>
           </div>
@@ -423,7 +415,7 @@ export default function NewEvent({
               sessionExpired
             }
           >
-            {saving ? 'Guardando…' : 'Guardar evento'}
+            {saving ? "Guardando…" : "Guardar evento"}
           </button>
         </div>
       </form>

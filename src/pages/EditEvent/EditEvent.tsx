@@ -1,21 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import {
   EventsError,
   getEvent,
   updateEvent,
-} from '../../services/eventsService';
+} from "../../services/eventsService";
 
 import type {
   EventRecord,
   UpdateEventInput,
-} from '../../services/eventsService';
+} from "../../services/eventsService";
 
-import type { User } from '../../hooks/useAuth';
+import type { User } from "../../hooks/useAuth";
 
-import '../NewEvent/NewEvent.scss';
+import LocationPicker from "../../components/maps/LocationPicker/LocationPicker";
+import type { LocationValue } from "../../components/maps/LocationPicker/LocationPicker";
+
+import "../NewEvent/NewEvent.scss";
 
 interface EditEventProps {
   accessToken: string;
@@ -35,59 +38,59 @@ interface FormValues {
 }
 
 const initialValues: FormValues = {
-  occurrence: '',
-  description: '',
-  address: '',
-  latitude: '',
-  longitude: '',
-  shift: '',
-  receivedBy: '',
-  receivedRole: '',
+  occurrence: "",
+  description: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+  shift: "",
+  receivedBy: "",
+  receivedRole: "",
 };
 
-const occurrenceFormatter = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'America/Argentina/Buenos_Aires',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
+const occurrenceFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "America/Argentina/Buenos_Aires",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
 });
 
 function toLocalOccurrence(value: string | null): string {
-  if (!value) return '';
+  if (!value) return "";
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return "";
 
   const parts = occurrenceFormatter.formatToParts(date);
 
   const get = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '';
+    parts.find((part) => part.type === type)?.value ?? "";
 
   return (
-    `${get('year')}-${get('month')}-${get('day')}` +
-    `T${get('hour')}:${get('minute')}`
+    `${get("year")}-${get("month")}-${get("day")}` +
+    `T${get("hour")}:${get("minute")}`
   );
 }
 
 function label(value: string): string {
-  const text = value.replace(/_/g, ' ');
+  const text = value.replace(/_/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function toFormValues(event: EventRecord): FormValues {
   return {
     occurrence: toLocalOccurrence(event.fecha_ocurrencia),
-    description: event.descripcion ?? '',
-    address: event.direccion ?? '',
+    description: event.descripcion ?? "",
+    address: event.direccion ?? "",
     latitude: String(event.latitud),
     longitude: String(event.longitud),
-    shift: event.turno ?? '',
-    receivedBy: event.recibio_nombre ?? '',
-    receivedRole: event.recibio_funcion ?? '',
+    shift: event.turno ?? "",
+    receivedBy: event.recibio_nombre ?? "",
+    receivedRole: event.recibio_funcion ?? "",
   };
 }
 
@@ -112,10 +115,10 @@ export default function EditEvent({
 
   const canEdit =
     event !== null &&
-    event.area === 'videoseguridad' &&
+    event.area === "videoseguridad" &&
     user.areas_acceso.includes(event.area) &&
-    user.permisos.includes('eventos:write') &&
-    (event.estado === 'abierto' || event.estado === 'cerrado');
+    user.permisos.includes("eventos:write") &&
+    (event.estado === "abierto" || event.estado === "cerrado");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -131,17 +134,13 @@ export default function EditEvent({
       const eventId = Number(id);
 
       if (!Number.isSafeInteger(eventId) || eventId <= 0) {
-        setLoadError('El identificador del evento no es válido.');
+        setLoadError("El identificador del evento no es válido.");
         setIsLoading(false);
         return;
       }
 
       try {
-        const result = await getEvent(
-          accessToken,
-          eventId,
-          controller.signal,
-        );
+        const result = await getEvent(accessToken, eventId, controller.signal);
 
         if (!active) return;
 
@@ -150,14 +149,12 @@ export default function EditEvent({
       } catch (err: unknown) {
         if (!active) return;
 
-        setSessionExpired(
-          err instanceof EventsError && err.status === 401,
-        );
+        setSessionExpired(err instanceof EventsError && err.status === 401);
 
         setLoadError(
           err instanceof EventsError
             ? err.message
-            : 'No pudimos cargar el evento. Intentá nuevamente.',
+            : "No pudimos cargar el evento. Intentá nuevamente.",
         );
       } finally {
         if (active) setIsLoading(false);
@@ -173,34 +170,38 @@ export default function EditEvent({
   }, [id, accessToken, version]);
 
   function update(field: keyof FormValues, value: string) {
-    setValues(previous => ({ ...previous, [field]: value }));
+    setValues((previous) => ({ ...previous, [field]: value }));
+    setSaveError(null);
+  }
+
+  function updateLocation(location: LocationValue) {
+    if (saving || sessionExpired || !canEdit) return;
+
+    setValues((previous) => ({
+      ...previous,
+      latitude: String(location.latitude),
+      longitude: String(location.longitude),
+    }));
+
     setSaveError(null);
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (
-      !event ||
-      !canEdit ||
-      submitting.current ||
-      sessionExpired
-    ) {
+    if (!event || !canEdit || submitting.current || sessionExpired) {
       return;
     }
 
     if (!values.description.trim() || !values.address.trim()) {
-      setSaveError('Completá la descripción y la dirección.');
+      setSaveError("Completá la descripción y la dirección.");
       return;
     }
 
     const occurrence = `${values.occurrence}:00-03:00`;
 
-    if (
-      !values.occurrence ||
-      Number.isNaN(new Date(occurrence).getTime())
-    ) {
-      setSaveError('Ingresá una fecha y hora de ocurrencia válida.');
+    if (!values.occurrence || Number.isNaN(new Date(occurrence).getTime())) {
+      setSaveError("Ingresá una fecha y hora de ocurrencia válida.");
       return;
     }
 
@@ -215,20 +216,21 @@ export default function EditEvent({
       latitude < -90 ||
       latitude > 90 ||
       longitude < -180 ||
-      longitude > 180
+      longitude > 180 ||
+      (latitude === 0 && longitude === 0)
     ) {
-      setSaveError('Ingresá coordenadas válidas para la ubicación.');
+      setSaveError("Seleccioná una ubicación válida o revisá las coordenadas.");
       return;
     }
 
-    const shifts = ['matutino', 'vespertino', 'nocturno'];
+    const shifts = ["matutino", "vespertino", "nocturno"];
 
     if (
-      values.shift !== (event.turno ?? '') &&
-      values.shift !== '' &&
+      values.shift !== (event.turno ?? "") &&
+      values.shift !== "" &&
       !shifts.includes(values.shift)
     ) {
-      setSaveError('Seleccioná un turno válido.');
+      setSaveError("Seleccioná un turno válido.");
       return;
     }
 
@@ -240,18 +242,15 @@ export default function EditEvent({
     const receivedBy = values.receivedBy.trim();
     const receivedRole = values.receivedRole.trim();
 
-    if (description !== (event.descripcion ?? '')) {
+    if (description !== (event.descripcion ?? "")) {
       input.descripcion = description;
     }
 
-    if (address !== (event.direccion ?? '')) {
+    if (address !== (event.direccion ?? "")) {
       input.direccion = address;
     }
 
-    if (
-      values.occurrence !==
-      toLocalOccurrence(event.fecha_ocurrencia)
-    ) {
+    if (values.occurrence !== toLocalOccurrence(event.fecha_ocurrencia)) {
       input.fecha_ocurrencia = occurrence;
     }
 
@@ -263,20 +262,20 @@ export default function EditEvent({
       input.longitud = longitude;
     }
 
-    if (values.shift !== (event.turno ?? '')) {
+    if (values.shift !== (event.turno ?? "")) {
       input.turno = values.shift;
     }
 
-    if (receivedBy !== (event.recibio_nombre ?? '')) {
+    if (receivedBy !== (event.recibio_nombre ?? "")) {
       input.recibio_nombre = receivedBy;
     }
 
-    if (receivedRole !== (event.recibio_funcion ?? '')) {
+    if (receivedRole !== (event.recibio_funcion ?? "")) {
       input.recibio_funcion = receivedRole;
     }
 
     if (Object.keys(input).length === 0) {
-      setSaveError('No realizaste cambios para guardar.');
+      setSaveError("No realizaste cambios para guardar.");
       return;
     }
 
@@ -285,24 +284,18 @@ export default function EditEvent({
     setSaveError(null);
 
     try {
-      const updatedEvent = await updateEvent(
-        accessToken,
-        event.id,
-        input,
-      );
+      const updatedEvent = await updateEvent(accessToken, event.id, input);
 
       navigate(`/eventos/${updatedEvent.id}`, {
         replace: true,
       });
     } catch (err: unknown) {
-      setSessionExpired(
-        err instanceof EventsError && err.status === 401,
-      );
+      setSessionExpired(err instanceof EventsError && err.status === 401);
 
       setSaveError(
         err instanceof EventsError
           ? err.message
-          : 'No pudimos confirmar el guardado. Consultá el detalle antes de volver a enviar los cambios.',
+          : "No pudimos confirmar el guardado. Consultá el detalle antes de volver a enviar los cambios.",
       );
     } finally {
       submitting.current = false;
@@ -317,21 +310,19 @@ export default function EditEvent({
           <h1>
             {event
               ? `Editar evento N.º ${event.numero_evento}`
-              : 'Editar evento'}
+              : "Editar evento"}
           </h1>
           <p>Centro de Monitoreo · Corrección del registro</p>
         </div>
 
         {!saving && (
-          <Link to={event ? `/eventos/${event.id}` : '/eventos'}>
-            {event ? 'Ver detalle' : 'Ver eventos'}
+          <Link to={event ? `/eventos/${event.id}` : "/eventos"}>
+            {event ? "Ver detalle" : "Ver eventos"}
           </Link>
         )}
       </header>
 
-      {isLoading && (
-        <p role="status">Cargando información del evento…</p>
-      )}
+      {isLoading && <p role="status">Cargando información del evento…</p>}
 
       {loadError && (
         <div className="new-event__error" role="alert">
@@ -342,10 +333,10 @@ export default function EditEvent({
             onClick={
               sessionExpired
                 ? onLogout
-                : () => setVersion(previous => previous + 1)
+                : () => setVersion((previous) => previous + 1)
             }
           >
-            {sessionExpired ? 'Volver al login' : 'Reintentar'}
+            {sessionExpired ? "Volver al login" : "Reintentar"}
           </button>
         </div>
       )}
@@ -353,8 +344,8 @@ export default function EditEvent({
       {!isLoading && !loadError && event && !canEdit && (
         <div className="new-event__error" role="alert">
           <p>
-            No tenés habilitada la edición de este evento
-            por sus permisos, área o estado.
+            No tenés habilitada la edición de este evento por sus permisos, área
+            o estado.
           </p>
           <Link to={`/eventos/${event.id}`}>Ver detalle</Link>
         </div>
@@ -363,11 +354,11 @@ export default function EditEvent({
       {!isLoading && !loadError && event && canEdit && (
         <>
           <p className="new-event__note">
-            El evento conservará su número y su estado actual:
-            {' '}<strong>{label(event.estado)}</strong>.
-            {event.estado === 'cerrado' &&
-              ' La corrección conservará los datos del cierre.'}
-            {' '}Las fechas se ingresan en horario argentino.
+            El evento conservará su número y su estado actual:{" "}
+            <strong>{label(event.estado)}</strong>.
+            {event.estado === "cerrado" &&
+              " La corrección conservará los datos del cierre."}{" "}
+            Las fechas se ingresan en horario argentino.
           </p>
 
           <form onSubmit={handleSubmit} aria-busy={saving}>
@@ -385,7 +376,7 @@ export default function EditEvent({
                   <p>
                     {event.servicio_actuante
                       ? label(event.servicio_actuante)
-                      : 'Sin información'}
+                      : "Sin información"}
                   </p>
                 </div>
 
@@ -396,9 +387,7 @@ export default function EditEvent({
                     type="datetime-local"
                     step="60"
                     value={values.occurrence}
-                    onChange={e =>
-                      update('occurrence', e.target.value)
-                    }
+                    onChange={(e) => update("occurrence", e.target.value)}
                   />
                 </label>
 
@@ -406,7 +395,7 @@ export default function EditEvent({
                   Turno
                   <select
                     value={values.shift}
-                    onChange={e => update('shift', e.target.value)}
+                    onChange={(e) => update("shift", e.target.value)}
                   >
                     <option value="">Sin informar</option>
                     <option value="matutino">Matutino</option>
@@ -414,7 +403,7 @@ export default function EditEvent({
                     <option value="nocturno">Nocturno</option>
 
                     {values.shift &&
-                      !['matutino', 'vespertino', 'nocturno'].includes(
+                      !["matutino", "vespertino", "nocturno"].includes(
                         values.shift,
                       ) && (
                         <option value={values.shift}>
@@ -430,9 +419,7 @@ export default function EditEvent({
                     required
                     rows={4}
                     value={values.description}
-                    onChange={e =>
-                      update('description', e.target.value)
-                    }
+                    onChange={(e) => update("description", e.target.value)}
                   />
                 </label>
               </div>
@@ -448,9 +435,18 @@ export default function EditEvent({
                     required
                     type="text"
                     value={values.address}
-                    onChange={e => update('address', e.target.value)}
+                    onChange={(e) => update("address", e.target.value)}
                   />
                 </label>
+
+                <div className="new-event__wide">
+                  <LocationPicker
+                    latitude={values.latitude}
+                    longitude={values.longitude}
+                    disabled={saving || sessionExpired || !canEdit}
+                    onChange={updateLocation}
+                  />
+                </div>
 
                 <label>
                   Latitud *
@@ -461,7 +457,7 @@ export default function EditEvent({
                     min="-90"
                     max="90"
                     value={values.latitude}
-                    onChange={e => update('latitude', e.target.value)}
+                    onChange={(e) => update("latitude", e.target.value)}
                   />
                 </label>
 
@@ -474,7 +470,7 @@ export default function EditEvent({
                     min="-180"
                     max="180"
                     value={values.longitude}
-                    onChange={e => update('longitude', e.target.value)}
+                    onChange={(e) => update("longitude", e.target.value)}
                   />
                 </label>
               </div>
@@ -489,9 +485,7 @@ export default function EditEvent({
                   <input
                     type="text"
                     value={values.receivedBy}
-                    onChange={e =>
-                      update('receivedBy', e.target.value)
-                    }
+                    onChange={(e) => update("receivedBy", e.target.value)}
                   />
                 </label>
 
@@ -500,9 +494,7 @@ export default function EditEvent({
                   <input
                     type="text"
                     value={values.receivedRole}
-                    onChange={e =>
-                      update('receivedRole', e.target.value)
-                    }
+                    onChange={(e) => update("receivedRole", e.target.value)}
                   />
                 </label>
               </div>
@@ -521,16 +513,14 @@ export default function EditEvent({
             )}
 
             <div className="new-event__actions">
-              {!saving && (
-                <Link to={`/eventos/${event.id}`}>Cancelar</Link>
-              )}
+              {!saving && <Link to={`/eventos/${event.id}`}>Cancelar</Link>}
 
               <button
                 className="new-event__primary"
                 type="submit"
                 disabled={saving || sessionExpired}
               >
-                {saving ? 'Guardando…' : 'Guardar cambios'}
+                {saving ? "Guardando…" : "Guardar cambios"}
               </button>
             </div>
           </form>
