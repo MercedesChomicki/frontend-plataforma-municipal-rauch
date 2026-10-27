@@ -17,6 +17,7 @@ import EventDetail from "./pages/EventDetail/EventDetail";
 import EditEvent from "./pages/EditEvent/EditEvent";
 import Reports from "./pages/Reports/Reports";
 import EventMap from "./pages/EventMap/EventMap";
+import NumberingSettings from "./pages/NumberingSettings/NumberingSettings";
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -165,6 +166,17 @@ export default function App() {
                 </div>
               </main>
             )
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        numbering={
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
+            <NumberingSettings
+              accessToken={auth.accessToken}
+              user={auth.user}
+              onLogout={handleLogout}
+            />
           ) : (
             <Navigate to="/login" replace />
           )

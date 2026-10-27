@@ -43,6 +43,7 @@ function csvCell(value: string | number | null): string {
   let text = String(value ?? '');
 
   // Evita que un texto del evento se interprete como una fórmula.
+  // eslint-disable-next-line no-control-regex -- Detección intencional de caracteres de control en campos CSV.
   if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text)) {
     text = `'${text}`;
   }

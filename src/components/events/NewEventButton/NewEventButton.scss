@@ -2,43 +2,50 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 
   min-height: 44px;
-  padding: 12px 22px;
+  padding: 12px 18px;
 
-  border: 0;
-  border-radius: 999px;
-  background: var(
-    --rauch-gradient,
-    linear-gradient(100deg, #ffc51b, #ff9335)
-  );
+  border: 1px solid #ffc51b;
+  border-radius: 10px;
+  background: #ffc51b;
 
   &,
   &:visited {
-    color: #172033;
+    color: #332600;
     text-decoration: none;
   }
 
   font: inherit;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
 
-  box-shadow: 0 3px 8px rgba(23, 32, 51, 0.12);
-  transition: box-shadow 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 
   svg {
+    flex: 0 0 auto;
     width: 18px;
     height: 18px;
-    flex-shrink: 0;
+    stroke-width: 2;
   }
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(23, 32, 51, 0.2);
+    border-color: #efb500;
+    background: #efb500;
+  }
+
+  &:active {
+    border-color: #dda700;
+    background: #dda700;
   }
 
   &:focus-visible {
-    outline: 2px solid #b77900;
-    outline-offset: 4px;
+    outline: 2px solid #926b00;
+    outline-offset: 3px;
   }
 }

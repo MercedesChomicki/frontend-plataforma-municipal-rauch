@@ -13,6 +13,11 @@ import type { EventRecord, EventType } from "../../services/eventsService";
 import LocationPicker from "../../components/maps/LocationPicker/LocationPicker";
 import type { LocationValue } from "../../components/maps/LocationPicker/LocationPicker";
 
+import {
+  getAreaNumbering,
+  NumberingError,
+} from "../../services/numberingService";
+import type { AreaNumbering } from "../../services/numberingService";
 import "./NewEvent.scss";
 
 interface NewEventProps {
@@ -51,9 +56,6 @@ function displayLabel(value: string): string {
 
 export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
   const [values, setValues] = useState<FormValues>(initialValues);
-  const [types, setTypes] = useState<EventType[]>([]);
-  const [loadingTypes, setLoadingTypes] = useState(true);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,42 +63,99 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
   const [version, setVersion] = useState(0);
 
   const submitting = useRef(false);
+  const [numberingVersion, setNumberingVersion] = useState(0);
+  const numberingKey = JSON.stringify([accessToken, numberingVersion]);
+  const [numberingResult, setNumberingResult] = useState<{
+    key: string;
+    data: AreaNumbering | null;
+    error: string | null;
+    expired: boolean;
+  } | null>(null);
+  const currentNumbering =
+    numberingResult?.key === numberingKey ? numberingResult : null;
+  const numbering = currentNumbering?.data ?? null;
+  const loadingNumbering = currentNumbering === null;
+  const numberingError = currentNumbering?.error ?? null;
+  const numberingSessionExpired = currentNumbering?.expired ?? false;
+  const numberingReady =
+    !loadingNumbering && !numberingError && numbering?.inicializada === true;
+  const catalogKey = JSON.stringify([accessToken, version]);
+  const [catalogResult, setCatalogResult] = useState<{
+    key: string;
+    data: EventType[];
+    error: string | null;
+    expired: boolean;
+  } | null>(null);
+  const currentCatalog =
+    catalogResult?.key === catalogKey ? catalogResult : null;
+  const types = currentCatalog?.data ?? [];
+  const loadingTypes = currentCatalog === null;
+  const catalogError = currentCatalog?.error ?? null;
+  const catalogExpired = currentCatalog?.expired ?? false;
+  const sessionBlocked =
+    sessionExpired || numberingSessionExpired || catalogExpired;
 
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-
-    async function loadTypes() {
-      setLoadingTypes(true);
-      setCatalogError(null);
-      setSessionExpired(false);
-
-      try {
-        const result = await getEventTypes(accessToken, controller.signal);
-
-        if (active) setTypes(result);
-      } catch (err: unknown) {
+    void getAreaNumbering(accessToken, controller.signal)
+      .then((result) => {
+        if (active)
+          setNumberingResult({
+            key: numberingKey,
+            data: result,
+            error: null,
+            expired: false,
+          });
+      })
+      .catch((err: unknown) => {
         if (!active) return;
-
-        setSessionExpired(err instanceof EventsError && err.status === 401);
-
-        setCatalogError(
-          err instanceof EventsError
-            ? err.message
-            : "No pudimos cargar los tipos de evento.",
-        );
-      } finally {
-        if (active) setLoadingTypes(false);
-      }
-    }
-
-    void loadTypes();
-
+        setNumberingResult({
+          key: numberingKey,
+          data: null,
+          expired: err instanceof NumberingError && err.status === 401,
+          error:
+            err instanceof NumberingError
+              ? err.message
+              : "No pudimos consultar la numeración. Reintentá antes de guardar.",
+        });
+      });
     return () => {
       active = false;
       controller.abort();
     };
-  }, [accessToken, version]);
+  }, [accessToken, numberingKey]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    void getEventTypes(accessToken, controller.signal)
+      .then((result) => {
+        if (active)
+          setCatalogResult({
+            key: catalogKey,
+            data: result,
+            error: null,
+            expired: false,
+          });
+      })
+      .catch((err: unknown) => {
+        if (!active) return;
+        setCatalogResult({
+          key: catalogKey,
+          data: [],
+          expired: err instanceof EventsError && err.status === 401,
+          error:
+            err instanceof EventsError
+              ? err.message
+              : "No pudimos cargar los tipos de evento.",
+        });
+      });
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [accessToken, catalogKey]);
 
   function update(field: keyof FormValues, value: string) {
     setValues((previous) => ({ ...previous, [field]: value }));
@@ -104,7 +163,7 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
   }
 
   function updateLocation(location: LocationValue) {
-    if (saving || sessionExpired) return;
+    if (saving || sessionBlocked || !numberingReady) return;
 
     setValues((previous) => ({
       ...previous,
@@ -118,7 +177,11 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submitting.current || created || sessionExpired) return;
+    if (submitting.current || created || sessionBlocked) return;
+    if (!numberingReady) {
+      setError("La numeración debe estar configurada antes de guardar.");
+      return;
+    }
 
     const typeId = Number(values.typeId);
     const latitude = Number(values.latitude);
@@ -184,6 +247,8 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
       setCreated(result);
     } catch (err: unknown) {
       setSessionExpired(err instanceof EventsError && err.status === 401);
+      if (err instanceof EventsError && err.status === 409)
+        setNumberingVersion((v) => v + 1);
 
       setError(
         err instanceof EventsError
@@ -228,16 +293,61 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
         fechas se ingresan en horario argentino.
       </p>
 
+      {loadingNumbering && (
+        <p role="status">Consultando numeración del área…</p>
+      )}
+      {numberingError && (
+        <div className="new-event__error" role="alert">
+          <p>{numberingError}</p>
+          <button
+            type="button"
+            onClick={
+              numberingSessionExpired
+                ? onLogout
+                : () => setNumberingVersion((v) => v + 1)
+            }
+          >
+            {numberingSessionExpired
+              ? "Volver al login"
+              : "Reintentar consulta"}
+          </button>
+        </div>
+      )}
+      {!loadingNumbering &&
+        !numberingError &&
+        numbering &&
+        !numbering.inicializada && (
+          <div className="new-event__error" role="alert">
+            <p>
+              El administrador del área debe configurar la numeración antes de
+              registrar eventos.
+            </p>
+            <Link to="/configuracion/numeracion">
+              Consultar configuración de numeración
+            </Link>
+            <button
+              type="button"
+              onClick={() => setNumberingVersion((v) => v + 1)}
+            >
+              Volver a consultar
+            </button>
+          </div>
+        )}
+
       {catalogError && (
         <div className="new-event__error" role="alert">
           <p>{catalogError}</p>
           <button
             type="button"
             onClick={
-              sessionExpired ? onLogout : () => setVersion((value) => value + 1)
+              sessionExpired || catalogExpired
+                ? onLogout
+                : () => setVersion((value) => value + 1)
             }
           >
-            {sessionExpired ? "Volver al login" : "Reintentar"}
+            {sessionExpired || catalogExpired
+              ? "Volver al login"
+              : "Reintentar"}
           </button>
         </div>
       )}
@@ -255,7 +365,8 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
             loadingTypes ||
             Boolean(catalogError) ||
             types.length === 0 ||
-            sessionExpired
+            sessionBlocked ||
+            !numberingReady
           }
         >
           <legend>Datos del evento</legend>
@@ -315,7 +426,7 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
           </div>
         </fieldset>
 
-        <fieldset disabled={saving || sessionExpired}>
+        <fieldset disabled={saving || sessionBlocked || !numberingReady}>
           <legend>Ubicación</legend>
 
           <div className="new-event__grid">
@@ -333,7 +444,7 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
               <LocationPicker
                 latitude={values.latitude}
                 longitude={values.longitude}
-                disabled={saving || sessionExpired}
+                disabled={saving || sessionBlocked || !numberingReady}
                 onChange={updateLocation}
               />
             </div>
@@ -366,7 +477,7 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
           </div>
         </fieldset>
 
-        <fieldset disabled={saving || sessionExpired}>
+        <fieldset disabled={saving || sessionBlocked || !numberingReady}>
           <legend>Recepción</legend>
 
           <div className="new-event__grid">
@@ -393,7 +504,7 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
         {error && (
           <div className="new-event__error" role="alert">
             <p>{error}</p>
-            {sessionExpired && (
+            {sessionBlocked && (
               <button type="button" onClick={onLogout}>
                 Volver al login
               </button>
@@ -412,7 +523,8 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
               loadingTypes ||
               Boolean(catalogError) ||
               types.length === 0 ||
-              sessionExpired
+              sessionBlocked ||
+              !numberingReady
             }
           >
             {saving ? "Guardando…" : "Guardar evento"}

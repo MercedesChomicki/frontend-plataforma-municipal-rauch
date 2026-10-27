@@ -1,7 +1,7 @@
 import { LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-import municipalLogo from "../../../assets/images/logo-letras-blancas.svg";
+import municipalLogo from "../../../assets/images/logo.svg";
 import "./Navbar.scss";
 
 interface NavbarProps {

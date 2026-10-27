@@ -1,41 +1,41 @@
-import { useEffect, useState } from 'react';
-import { EventsError, getEvents } from '../../services/eventsService';
-import type { EventRecord } from '../../services/eventsService';
-import './Events.scss';
-import NewEventButton from '../../components/events/NewEventButton/NewEventButton';
-import { Link } from 'react-router-dom';
-import type { User } from '../../hooks/useAuth';
-import { Download } from 'lucide-react';
-import { exportEventsCsv } from '../../utils/exportEventsCsv';
+import { useEffect, useState } from "react";
+import { EventsError, getEvents } from "../../services/eventsService";
+import type { EventRecord } from "../../services/eventsService";
+import "./Events.scss";
+import NewEventButton from "../../components/events/NewEventButton/NewEventButton";
+import { Link } from "react-router-dom";
+import type { User } from "../../hooks/useAuth";
+import { Download } from "lucide-react";
+import { exportEventsCsv } from "../../utils/exportEventsCsv";
 
 interface EventsProps {
   accessToken: string;
-  user:User;
+  user: User;
   onLogout: () => void;
 }
 
-const TIME_ZONE = 'America/Argentina/Buenos_Aires';
+const TIME_ZONE = "America/Argentina/Buenos_Aires";
 const PAGE_SIZE = 10;
 
-const dateFormatter = new Intl.DateTimeFormat('es-AR', {
+const dateFormatter = new Intl.DateTimeFormat("es-AR", {
   timeZone: TIME_ZONE,
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
 });
 
-const timeFormatter = new Intl.DateTimeFormat('es-AR', {
+const timeFormatter = new Intl.DateTimeFormat("es-AR", {
   timeZone: TIME_ZONE,
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
 });
 
-const calendarFormatter = new Intl.DateTimeFormat('en-US', {
+const calendarFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
 });
 
 function occurrenceDate(value: string | null): Date | null {
@@ -49,57 +49,53 @@ function dayKey(date: Date): string {
   const parts = calendarFormatter.formatToParts(date);
 
   const get = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '';
+    parts.find((part) => part.type === type)?.value ?? "";
 
-  return `${get('year')}-${get('month')}-${get('day')}`;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 function normalize(value: string): string {
   return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
 
 function label(value: string): string {
-  const text = value.replace(/_/g, ' ');
+  const text = value.replace(/_/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function uniqueOptions(values: Array<string | null>): string[] {
-  return [...new Set(values.filter(
-    (value): value is string => Boolean(value),
-  ))].sort((a, b) => a.localeCompare(b, 'es'));
+  return [
+    ...new Set(values.filter((value): value is string => Boolean(value))),
+  ].sort((a, b) => a.localeCompare(b, "es"));
 }
 
 const statusClasses: Record<string, string> = {
-  abierto: 'events-page__status--open',
-  cerrado: 'events-page__status--closed',
-  anulado: 'events-page__status--cancelled',
+  abierto: "events-page__status--open",
+  cerrado: "events-page__status--closed",
+  anulado: "events-page__status--cancelled",
 };
 
-export default function Events({
-  accessToken,
-  user,
-  onLogout,
-}: EventsProps) {
+export default function Events({ accessToken, user, onLogout }: EventsProps) {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [version, setVersion] = useState(0);
 
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [type, setType] = useState('');
-  const [service, setService] = useState('');
-  const [shift, setShift] = useState('');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [type, setType] = useState("");
+  const [service, setService] = useState("");
+  const [shift, setShift] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState("");
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
@@ -119,25 +115,22 @@ export default function Events({
       setPage(1);
 
       try {
-        const result = await getEvents(
-          accessToken,
-          controller.signal,
-        );
+        const result = await getEvents(accessToken, controller.signal, {
+          includeCancelled: true,
+        });
 
         if (active) setEvents(result);
       } catch (err: unknown) {
         if (!active) return;
 
-        setSessionExpired(
-          err instanceof EventsError && err.status === 401,
-        );
+        setSessionExpired(err instanceof EventsError && err.status === 401);
 
         setError(
           err instanceof TypeError
-            ? 'No pudimos conectar con el sistema. Intentá nuevamente.'
+            ? "No pudimos conectar con el sistema. Intentá nuevamente."
             : err instanceof Error
               ? err.message
-              : 'No pudimos cargar los eventos.',
+              : "No pudimos cargar los eventos.",
         );
       } finally {
         if (active) setIsLoading(false);
@@ -162,54 +155,59 @@ export default function Events({
 
   function clearFilters() {
     changeFilter(() => {
-      setSearch('');
-      setStatus('');
-      setType('');
-      setService('');
-      setShift('');
-      setFrom('');
-      setTo('');
-      setAddress('');
+      setSearch("");
+      setStatus("");
+      setType("");
+      setService("");
+      setShift("");
+      setFrom("");
+      setTo("");
+      setAddress("");
     });
   }
 
   const invalidDates = Boolean(from && to && from > to);
   const query = normalize(search);
 
-  const filtered = events.filter(event => {
-    if (invalidDates) return false;
-    if (status && event.estado !== status) return false;
-    if (type && event.tipo_evento !== type) return false;
-    if (service && event.servicio_actuante !== service) return false;
-    if (shift && event.turno !== shift) return false;
-    if (address.trim() && !normalize(event.direccion ?? '').includes(normalize(address))) return false;
+  const filtered = events
+    .filter((event) => {
+      if (invalidDates) return false;
+      if (status && event.estado !== status) return false;
+      if (type && event.tipo_evento !== type) return false;
+      if (service && event.servicio_actuante !== service) return false;
+      if (shift && event.turno !== shift) return false;
+      if (
+        address.trim() &&
+        !normalize(event.direccion ?? "").includes(normalize(address))
+      )
+        return false;
 
-    const date = occurrenceDate(event.fecha_ocurrencia);
+      const date = occurrenceDate(event.fecha_ocurrencia);
 
-    if (from || to) {
-      if (!date) return false;
+      if (from || to) {
+        if (!date) return false;
 
-      const key = dayKey(date);
-      if (from && key < from) return false;
-      if (to && key > to) return false;
-    }
+        const key = dayKey(date);
+        if (from && key < from) return false;
+        if (to && key > to) return false;
+      }
 
-    const searchable = [
-      event.numero_evento,
-      event.descripcion,
-      event.direccion,
-      event.tipo_evento,
-      event.servicio_actuante,
-    ].join(' ');
+      const searchable = [
+        event.numero_evento,
+        event.descripcion,
+        event.direccion,
+        event.tipo_evento,
+        event.servicio_actuante,
+      ].join(" ");
 
-    return !query || normalize(searchable).includes(query);
-  }).sort((a, b) => {
-    const dateA = occurrenceDate(a.fecha_ocurrencia)?.getTime();
-    const dateB = occurrenceDate(b.fecha_ocurrencia)?.getTime();
+      return !query || normalize(searchable).includes(query);
+    })
+    .sort((a, b) => {
+      const dateA = occurrenceDate(a.fecha_ocurrencia)?.getTime();
+      const dateB = occurrenceDate(b.fecha_ocurrencia)?.getTime();
 
-    return (dateB ?? -Infinity) - (dateA ?? -Infinity) ||
-      b.id - a.id;
-  });
+      return (dateB ?? -Infinity) - (dateA ?? -Infinity) || b.id - a.id;
+    });
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -219,24 +217,21 @@ export default function Events({
   );
 
   const openCount = filtered.filter(
-    event => event.estado === 'abierto',
+    (event) => event.estado === "abierto",
   ).length;
 
   const closedCount = filtered.filter(
-    event => event.estado === 'cerrado',
+    (event) => event.estado === "cerrado",
   ).length;
 
   const cancelledCount = filtered.filter(
-    event => event.estado === 'anulado',
+    (event) => event.estado === "anulado",
   ).length;
 
   const allSelected =
-    filtered.length > 0 &&
-    filtered.every(event => selected.has(event.id));
+    filtered.length > 0 && filtered.every((event) => selected.has(event.id));
 
-  const selectedEvents = filtered.filter(event =>
-    selected.has(event.id),
-  );
+  const selectedEvents = filtered.filter((event) => selected.has(event.id));
 
   function handleExport() {
     setExportError(null);
@@ -254,7 +249,7 @@ export default function Events({
       setExportError(
         err instanceof Error
           ? err.message
-          : 'No pudimos generar el archivo. Intentá nuevamente.',
+          : "No pudimos generar el archivo. Intentá nuevamente.",
       );
     }
   }
@@ -263,7 +258,7 @@ export default function Events({
     setExportError(null);
     setExportMessage(null);
 
-    setSelected(previous => {
+    setSelected((previous) => {
       const next = new Set(previous);
 
       if (next.has(id)) next.delete(id);
@@ -278,9 +273,7 @@ export default function Events({
     setExportMessage(null);
 
     setSelected(
-      allSelected
-        ? new Set()
-        : new Set(filtered.map(event => event.id)),
+      allSelected ? new Set() : new Set(filtered.map((event) => event.id)),
     );
   }
 
@@ -294,20 +287,19 @@ export default function Events({
           </div>
 
           <div className="events-page__actions">
-            {user.permisos.includes('eventos:write') &&
-              user.areas_acceso.includes('videoseguridad') && (
+            {user.permisos.includes("eventos:write") &&
+              user.areas_acceso.includes("videoseguridad") && (
                 <NewEventButton />
               )}
 
             <button
               type="button"
               disabled={isLoading}
-              onClick={() => setVersion(value => value + 1)}
+              onClick={() => setVersion((value) => value + 1)}
             >
-              {isLoading ? 'Cargando…' : 'Actualizar'}
+              {isLoading ? "Cargando…" : "Actualizar"}
             </button>
           </div>
-          
         </div>
 
         <section className="events-page__filters" aria-label="Filtros">
@@ -317,9 +309,9 @@ export default function Events({
               type="search"
               placeholder="Número, descripción o dirección"
               value={search}
-              onChange={event => changeFilter(
-                () => setSearch(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setSearch(event.target.value))
+              }
             />
           </label>
 
@@ -327,9 +319,9 @@ export default function Events({
             Estado
             <select
               value={status}
-              onChange={event => changeFilter(
-                () => setStatus(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setStatus(event.target.value))
+              }
             >
               <option value="">Todos</option>
               <option value="abierto">Abierto</option>
@@ -342,17 +334,18 @@ export default function Events({
             Tipo
             <select
               value={type}
-              onChange={event => changeFilter(
-                () => setType(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setType(event.target.value))
+              }
             >
               <option value="">Todos</option>
-              {uniqueOptions(events.map(event => event.tipo_evento))
-                .map(value => (
+              {uniqueOptions(events.map((event) => event.tipo_evento)).map(
+                (value) => (
                   <option key={value} value={value}>
                     {label(value)}
                   </option>
-                ))}
+                ),
+              )}
             </select>
           </label>
 
@@ -360,17 +353,18 @@ export default function Events({
             Servicio
             <select
               value={service}
-              onChange={event => changeFilter(
-                () => setService(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setService(event.target.value))
+              }
             >
               <option value="">Todos</option>
-              {uniqueOptions(events.map(event => event.servicio_actuante))
-                .map(value => (
-                  <option key={value} value={value}>
-                    {label(value)}
-                  </option>
-                ))}
+              {uniqueOptions(
+                events.map((event) => event.servicio_actuante),
+              ).map((value) => (
+                <option key={value} value={value}>
+                  {label(value)}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -378,9 +372,9 @@ export default function Events({
             Turno
             <select
               value={shift}
-              onChange={event => changeFilter(
-                () => setShift(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setShift(event.target.value))
+              }
             >
               <option value="">Todos</option>
               <option value="matutino">Matutino</option>
@@ -395,9 +389,9 @@ export default function Events({
               type="search"
               placeholder="Calle o dirección"
               value={address}
-              onChange={event => changeFilter(
-                () => setAddress(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setAddress(event.target.value))
+              }
             />
           </label>
 
@@ -406,9 +400,9 @@ export default function Events({
             <input
               type="date"
               value={from}
-              onChange={event => changeFilter(
-                () => setFrom(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setFrom(event.target.value))
+              }
             />
           </label>
 
@@ -417,9 +411,9 @@ export default function Events({
             <input
               type="date"
               value={to}
-              onChange={event => changeFilter(
-                () => setTo(event.target.value),
-              )}
+              onChange={(event) =>
+                changeFilter(() => setTo(event.target.value))
+              }
             />
           </label>
 
@@ -442,10 +436,10 @@ export default function Events({
               onClick={
                 sessionExpired
                   ? onLogout
-                  : () => setVersion(value => value + 1)
+                  : () => setVersion((value) => value + 1)
               }
             >
-              {sessionExpired ? 'Volver al login' : 'Reintentar'}
+              {sessionExpired ? "Volver al login" : "Reintentar"}
             </button>
           </div>
         )}
@@ -453,11 +447,21 @@ export default function Events({
         {!isLoading && !error && !invalidDates && (
           <>
             <section className="events-page__summary" aria-label="Resultados">
-              <span>Total: <strong>{filtered.length}</strong></span>
-              <span>Abiertos: <strong>{openCount}</strong></span>
-              <span>Cerrados: <strong>{closedCount}</strong></span>
-              <span>Anulados: <strong>{cancelledCount}</strong></span>
-              <span>Seleccionados: <strong>{selected.size}</strong></span>
+              <span>
+                Total: <strong>{filtered.length}</strong>
+              </span>
+              <span>
+                Abiertos: <strong>{openCount}</strong>
+              </span>
+              <span>
+                Cerrados: <strong>{closedCount}</strong>
+              </span>
+              <span>
+                Anulados: <strong>{cancelledCount}</strong>
+              </span>
+              <span>
+                Seleccionados: <strong>{selected.size}</strong>
+              </span>
             </section>
 
             <div className="events-page__selection">
@@ -468,8 +472,8 @@ export default function Events({
                   disabled={filtered.length === 0}
                 >
                   {allSelected
-                    ? 'Quitar selección'
-                    : 'Seleccionar todos los resultados'}
+                    ? "Quitar selección"
+                    : "Seleccionar todos los resultados"}
                 </button>
 
                 <button
@@ -484,15 +488,13 @@ export default function Events({
               </div>
 
               <p>
-                La selección incluye los resultados de todas las páginas.
-                Al cambiar los filtros, se limpia la selección.
-                La descarga se realiza en formato CSV y las fechas
-                corresponden al horario argentino.
+                La selección incluye los resultados de todas las páginas. Al
+                cambiar los filtros, se limpia la selección. La descarga se
+                realiza en formato CSV y las fechas corresponden al horario
+                argentino.
               </p>
 
-              {exportMessage && (
-                <p role="status">{exportMessage}</p>
-              )}
+              {exportMessage && <p role="status">{exportMessage}</p>}
 
               {exportError && (
                 <div className="events-page__error" role="alert">
@@ -528,7 +530,9 @@ export default function Events({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} role="status">Cargando eventos…</td>
+                  <td colSpan={9} role="status">
+                    Cargando eventos…
+                  </td>
                 </tr>
               ) : error ? (
                 <tr>
@@ -542,62 +546,68 @@ export default function Events({
                 <tr>
                   <td colSpan={9}>
                     {events.length === 0
-                      ? 'Todavía no hay eventos registrados.'
-                      : 'No hay eventos que coincidan con los filtros.'}
+                      ? "Todavía no hay eventos registrados."
+                      : "No hay eventos que coincidan con los filtros."}
                   </td>
                 </tr>
-              ) : visible.map(event => {
-                const date = occurrenceDate(event.fecha_ocurrencia);
+              ) : (
+                visible.map((event) => {
+                  const date = occurrenceDate(event.fecha_ocurrencia);
 
-                return (
-                  <tr key={event.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(event.id)}
-                        onChange={() => toggleSelection(event.id)}
-                        aria-label={`Seleccionar evento ${event.numero_evento}`}
-                      />
-                    </td>
-                    <td>{event.numero_evento}</td>
-                    <td>{label(event.tipo_evento)}</td>
-                    <td>{event.descripcion || 'Sin descripción'}</td>
-                    <td>{event.direccion || 'Sin dirección'}</td>
-                    <td>
-                      {date ? (
-                        <time dateTime={event.fecha_ocurrencia ?? undefined}>
-                          {dateFormatter.format(date)}
-                          <small>{timeFormatter.format(date)}</small>
-                        </time>
-                      ) : 'Sin fecha'}
-                    </td>
-                    <td>
-                      {event.servicio_actuante
-                        ? label(event.servicio_actuante)
-                        : 'Sin servicio informado'}
-                    </td>
-                    <td>
-                      <span
-                        className={[
-                          'events-page__status',
-                          statusClasses[event.estado] ?? '',
-                        ].filter(Boolean).join(' ')}
-                      >
-                        {label(event.estado)}
-                      </span>
-                    </td>
-                    <td>
-                      <Link
-                        to={`/eventos/${event.id}`}
-                        className="events-page__detail-link"
-                        aria-label={`Ver detalle del evento ${event.numero_evento}`}
-                      >
-                        Ver detalle
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={event.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(event.id)}
+                          onChange={() => toggleSelection(event.id)}
+                          aria-label={`Seleccionar evento ${event.numero_evento}`}
+                        />
+                      </td>
+                      <td>{event.numero_evento}</td>
+                      <td>{label(event.tipo_evento)}</td>
+                      <td>{event.descripcion || "Sin descripción"}</td>
+                      <td>{event.direccion || "Sin dirección"}</td>
+                      <td>
+                        {date ? (
+                          <time dateTime={event.fecha_ocurrencia ?? undefined}>
+                            {dateFormatter.format(date)}
+                            <small>{timeFormatter.format(date)}</small>
+                          </time>
+                        ) : (
+                          "Sin fecha"
+                        )}
+                      </td>
+                      <td>
+                        {event.servicio_actuante
+                          ? label(event.servicio_actuante)
+                          : "Sin servicio informado"}
+                      </td>
+                      <td>
+                        <span
+                          className={[
+                            "events-page__status",
+                            statusClasses[event.estado] ?? "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        >
+                          {label(event.estado)}
+                        </span>
+                      </td>
+                      <td>
+                        <Link
+                          to={`/eventos/${event.id}`}
+                          className="events-page__detail-link"
+                          aria-label={`Ver detalle del evento ${event.numero_evento}`}
+                        >
+                          Ver detalle
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -612,7 +622,9 @@ export default function Events({
               Anterior
             </button>
 
-            <span>Página {currentPage} de {pageCount}</span>
+            <span>
+              Página {currentPage} de {pageCount}
+            </span>
 
             <button
               type="button"
