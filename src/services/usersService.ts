@@ -76,3 +76,76 @@ export async function setUserActive(
 
   return response.json();
 }
+
+export interface CreateOperatorInput {
+  username: string;
+  email?: string;
+  nombre: string;
+  apellido: string;
+  password: string;
+}
+
+interface UserRole {
+  id: number;
+  nombre: string;
+}
+
+export async function getOperatorRoleId(
+  token: string,
+  signal: AbortSignal,
+): Promise<number> {
+  const response = await fetch(`${API_URL}/usuarios/roles`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  if (!response.ok) throw new UsersError(response.status);
+
+  const roles: UserRole[] = await response.json();
+  const operator = roles.find(role => role.nombre === "operador");
+
+  if (!operator) {
+    throw new Error(
+      "No está disponible el rol Operador. Contactá al administrador.",
+    );
+  }
+
+  return operator.id;
+}
+
+export async function createOperator(
+  token: string,
+  roleId: number,
+  input: CreateOperatorInput,
+): Promise<ManagedUser> {
+  const response = await fetch(`${API_URL}/usuarios/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username: input.username.trim(),
+      email: input.email?.trim() || undefined,
+      nombre: input.nombre.trim(),
+      apellido: input.apellido.trim(),
+      password: input.password,
+      rol_ids: [roleId],
+      area: "videoseguridad",
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 409) {
+      throw new Error(
+        "No se pudo crear la cuenta. Comprobá si el usuario o el correo ya están registrados.",
+      );
+    }
+
+    throw new UsersError(response.status);
+  }
+
+  return response.json();
+}

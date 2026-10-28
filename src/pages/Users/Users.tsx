@@ -8,6 +8,7 @@ import {
   UsersError,
 } from "../../services/usersService";
 import type { ManagedUser } from "../../services/usersService";
+import CreateOperatorForm from "../../components/users/CreateOperatorForm/CreateOperatorForm";
 
 import "./Users.scss";
 
@@ -52,13 +53,9 @@ export default function Users(props: UsersProps) {
 
   return (
     <UsersContent
-      key={JSON.stringify([
-        props.accessToken,
-        props.user.id,
-        revision,
-      ])}
+      key={JSON.stringify([props.accessToken, props.user.id, revision])}
       {...props}
-      onRefresh={() => setRevision(value => value + 1)}
+      onRefresh={() => setRevision((value) => value + 1)}
     />
   );
 }
@@ -80,29 +77,32 @@ function UsersContent({
   const [isSaving, setIsSaving] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(false);
 
+  const [showCreate, setShowCreate] = useState(false);
+
   const submitting = useRef(false);
   const mounted = useRef(false);
 
   const canWrite = user.permisos.includes("users:write");
+
+  const canCreate =
+    canWrite &&
+    user.area === "videoseguridad" &&
+    user.areas_acceso.includes("videoseguridad");
 
   useEffect(() => {
     const controller = new AbortController();
     mounted.current = true;
 
     void getUsers(accessToken, controller.signal)
-      .then(result => {
+      .then((result) => {
         if (!controller.signal.aborted) {
-          setItems(
-            result.filter(item => item.area === "videoseguridad"),
-          );
+          setItems(result.filter((item) => item.area === "videoseguridad"));
         }
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
 
-        setExpired(
-          err instanceof UsersError && err.status === 401,
-        );
+        setExpired(err instanceof UsersError && err.status === 401);
         setError(
           err instanceof UsersError
             ? err.message
@@ -121,7 +121,7 @@ function UsersContent({
 
   const query = normalize(search.trim());
 
-  const filtered = items.filter(item => {
+  const filtered = items.filter((item) => {
     const matchesSearch = normalize(
       `${fullName(item)} ${item.username} ${item.email ?? ""}`,
     ).includes(query);
@@ -161,19 +161,13 @@ function UsersContent({
     setError(null);
 
     try {
-      await setUserActive(
-        accessToken,
-        selected.id,
-        !selected.activo,
-      );
+      await setUserActive(accessToken, selected.id, !selected.activo);
 
       if (mounted.current) onRefresh();
     } catch (err: unknown) {
       if (!mounted.current) return;
 
-      setExpired(
-        err instanceof UsersError && err.status === 401,
-      );
+      setExpired(err instanceof UsersError && err.status === 401);
       setNeedsRefresh(true);
       setError(
         err instanceof UsersError
@@ -196,14 +190,43 @@ function UsersContent({
             <p>Consultá las cuentas y gestioná su acceso.</p>
           </div>
 
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isLoading || isSaving || expired}
-          >
-            Actualizar listado
-          </button>
+          <div className="users-page__actions">
+            {canCreate && (
+              <button
+                type="button"
+                disabled={
+                  isLoading ||
+                  isSaving ||
+                  expired ||
+                  needsRefresh ||
+                  selected !== null ||
+                  showCreate
+                }
+                onClick={() => setShowCreate(true)}
+              >
+                Crear operador
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isLoading || isSaving || expired || showCreate}
+            >
+              Actualizar listado
+            </button>
+          </div>
         </header>
+
+        {showCreate && canCreate && (
+          <CreateOperatorForm
+            key={accessToken}
+            accessToken={accessToken}
+            onCreated={onRefresh}
+            onCancel={() => setShowCreate(false)}
+            onSessionExpired={onLogout}
+          />
+        )}
 
         {error && (
           <div className="users-page__error" role="alert">
@@ -211,7 +234,7 @@ function UsersContent({
             <button
               type="button"
               onClick={expired ? onLogout : onRefresh}
-              disabled={isSaving}
+              disabled={isSaving || showCreate}
             >
               {expired ? "Volver al login" : "Volver a consultar"}
             </button>
@@ -228,7 +251,7 @@ function UsersContent({
                 <input
                   type="search"
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder="Nombre, apellido, usuario o correo"
                 />
               </label>
@@ -237,7 +260,7 @@ function UsersContent({
                 Estado de la cuenta
                 <select
                   value={status}
-                  onChange={e => setStatus(e.target.value)}
+                  onChange={(e) => setStatus(e.target.value)}
                 >
                   <option value="todos">Todos</option>
                   <option value="activos">Activas</option>
@@ -246,9 +269,7 @@ function UsersContent({
               </label>
             </div>
 
-            <p role="status">
-              {filtered.length} cuenta(s) encontrada(s).
-            </p>
+            <p role="status">{filtered.length} cuenta(s) encontrada(s).</p>
 
             {selected && (
               <section
@@ -261,9 +282,9 @@ function UsersContent({
                 </h2>
 
                 <p>
-                  ¿Querés {selected.activo ? "desactivar" : "activar"} la
-                  cuenta de <strong>{fullName(selected)}</strong>
-                  {" "}({selected.username})?
+                  ¿Querés {selected.activo ? "desactivar" : "activar"} la cuenta
+                  de <strong>{fullName(selected)}</strong> ({selected.username}
+                  )?
                 </p>
 
                 <p>
@@ -315,7 +336,7 @@ function UsersContent({
                     </tr>
                   )}
 
-                  {filtered.map(item => (
+                  {filtered.map((item) => (
                     <tr key={item.id}>
                       <td>
                         <strong>{fullName(item)}</strong>
@@ -324,7 +345,7 @@ function UsersContent({
                       <td>{item.username}</td>
                       <td>
                         {item.roles
-                          .map(role =>
+                          .map((role) =>
                             role.nombre === "admin"
                               ? "Administrador de Área"
                               : role.nombre === "operador"
@@ -336,9 +357,7 @@ function UsersContent({
                       <td>
                         <span
                           className={`users-page__badge ${
-                            item.activo
-                              ? "users-page__badge--active"
-                              : ""
+                            item.activo ? "users-page__badge--active" : ""
                           }`}
                         >
                           {item.activo ? "Activa" : "Inactiva"}
@@ -354,7 +373,8 @@ function UsersContent({
                               isSaving ||
                               expired ||
                               needsRefresh ||
-                              selected !== null
+                              selected !== null ||
+                              showCreate
                             }
                             onClick={() => setSelected(item)}
                             aria-label={`${
