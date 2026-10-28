@@ -46,6 +46,7 @@ export default function Users(props: UsersProps) {
           <h1>Usuarios</h1>
           <p>No tenés permiso para consultar los usuarios de COM.</p>
           <Link to="/panel">Volver al panel</Link>
+          <Link to="/configuracion">Volver a configuración</Link>
         </div>
       </main>
     );

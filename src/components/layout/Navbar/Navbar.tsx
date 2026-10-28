@@ -73,15 +73,16 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
           Mapa
         </NavLink>
 
-        {user.permisos.includes("users:read") &&
-          user.areas_acceso.includes("videoseguridad") && (
+        {user.areas_acceso.includes("videoseguridad") &&
+          (user.permisos.includes("users:read") ||
+            user.permisos.includes("eventos:read")) && (
             <NavLink
-              to="/configuracion/usuarios"
+              to="/configuracion"
               className={({ isActive }) =>
                 `navbar__link${isActive ? " navbar__link--active" : ""}`
               }
             >
-              Usuarios
+              Configuración
             </NavLink>
           )}
       </nav>

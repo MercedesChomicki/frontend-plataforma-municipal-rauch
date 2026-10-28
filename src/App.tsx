@@ -19,6 +19,7 @@ import Reports from "./pages/Reports/Reports";
 import EventMap from "./pages/EventMap/EventMap";
 import NumberingSettings from "./pages/NumberingSettings/NumberingSettings";
 import Users from "./pages/Users/Users";
+import Settings from "./pages/Settings/Settings";
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -189,6 +190,13 @@ export default function App() {
               user={auth.user}
               onLogout={handleLogout}
             />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        settings={
+          auth.isAuthenticated && auth.user ? (
+            <Settings user={auth.user} />
           ) : (
             <Navigate to="/login" replace />
           )

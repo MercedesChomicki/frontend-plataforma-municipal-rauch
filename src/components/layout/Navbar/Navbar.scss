@@ -1,5 +1,4 @@
 .navbar {
-  // Colores propios de la navegación clara.
   --nav-background: #fff;
   --nav-text: #334155;
   --nav-muted: #64748b;
@@ -202,33 +201,15 @@
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .navbar {
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 20px;
     padding-inline: 24px;
 
     &__brand img {
       width: 125px;
     }
-
-    &__link {
-      padding-inline: 10px;
-      font-size: 13px;
-    }
-  }
-}
-
-@media (max-width: 1100px) {
-  .navbar__link {
-    padding-inline: 12px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .navbar {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px 20px;
 
     &__account {
       grid-column: 2;
@@ -238,28 +219,15 @@
     &__nav {
       grid-column: 1 / -1;
       grid-row: 2;
-
-      justify-self: stretch;
+      justify-self: center;
       flex-wrap: wrap;
-      gap: 6px;
-
-      padding-top: 10px;
-      border-top: 1px solid #f1f5f9;
+      width: fit-content;
+      max-width: 100%;
     }
 
     &__link {
-      padding-inline: 14px;
-      font-size: 14px;
+      padding-inline: 12px;
     }
-  }
-  
-  .navbar__nav {
-    justify-self: center;
-    width: fit-content;
-    max-width: 100%;
-
-    border: 1px solid #eceef2;
-    padding: 5px;
   }
 }
 
@@ -276,6 +244,10 @@
       gap: 8px;
     }
 
+    &__avatar {
+      display: none;
+    }
+
     &__user {
       strong {
         font-size: 12px;
@@ -286,55 +258,27 @@
       }
     }
 
-    &__avatar {
-      display: none;
-    }
-
     &__nav {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 4px;
       width: 100%;
     }
 
     &__link {
+      flex: 1 1 110px;
       min-height: 44px;
-      padding: 8px 6px;
+      padding: 8px 10px;
       font-size: 12px;
       white-space: normal;
       text-align: center;
     }
   }
-
-  .navbar__nav {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    width: 100%;
-  }
-
-  .navbar__link {
-    min-height: 44px;
-    padding: 8px 6px;
-
-    font-size: 12px;
-    white-space: normal;
-    text-align: center;
-  }
 }
 
 @media (max-width: 380px) {
-  .navbar {
-    &__user {
-      display: none;
-    }
-
-    &__nav {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  .navbar__nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .navbar__user {
+    display: none;
   }
 }

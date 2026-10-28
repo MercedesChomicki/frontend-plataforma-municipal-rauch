@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactElement } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 interface AppRouterProps {
   home: ReactElement;
@@ -13,6 +13,7 @@ interface AppRouterProps {
   map: ReactElement;
   numbering: ReactElement;
   users: ReactElement;
+  settings: ReactElement;
 }
 
 export default function AppRouter({
@@ -27,6 +28,7 @@ export default function AppRouter({
   map,
   numbering,
   users,
+  settings,
 }: AppRouterProps) {
   return (
     <Routes>
@@ -41,6 +43,8 @@ export default function AppRouter({
 
       <Route path="/reportes" element={reports} />
       <Route path="/mapa" element={map} />
+
+      <Route path="/configuracion" element={settings} />
       <Route path="/configuracion/numeracion" element={numbering} />
       <Route path="/configuracion/usuarios" element={users} />
 

@@ -41,6 +41,7 @@ export default function NumberingSettings(props: Props) {
             No tenés permiso para consultar esta configuración.
           </p>
           <Link to="/eventos">Ver eventos</Link>
+          <Link to="/configuracion">Volver a configuración</Link>
         </div>
       </main>
     );

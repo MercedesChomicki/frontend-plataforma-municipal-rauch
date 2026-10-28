@@ -241,16 +241,6 @@ export default function ControlPanel({
           <div className="control-panel__heading-actions">
             {canCreate && <NewEventButton />}
 
-            {user.permisos.includes("numeracion:configurar") &&
-              user.areas_acceso.includes("videoseguridad") && (
-                <Link
-                  to="/configuracion/numeracion"
-                  className="control-panel__settings-link"
-                >
-                  Configurar numeración
-                </Link>
-              )}
-
             <div className="control-panel__update">
               <p>
                 {data ? (
