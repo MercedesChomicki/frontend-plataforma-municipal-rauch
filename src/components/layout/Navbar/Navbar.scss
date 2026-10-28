@@ -128,6 +128,15 @@
 
     font-size: 12px;
     font-weight: 800;
+    text-decoration: none;
+
+    &:visited {
+      color: #475467;
+    }
+
+    &:hover {
+      background: #e4e7ec;
+    }
   }
 
   &__user {
@@ -245,16 +254,27 @@
     }
 
     &__avatar {
-      display: none;
+      display: grid;
     }
 
     &__user {
+      min-height: 44px;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 8px;
+      text-decoration: none;
+
       strong {
         font-size: 12px;
       }
 
       span {
         font-size: 10px;
+      }
+
+      &:hover,
+      &[aria-current="page"] {
+        background: var(--nav-hover);
       }
     }
 

@@ -20,6 +20,7 @@ import EventMap from "./pages/EventMap/EventMap";
 import NumberingSettings from "./pages/NumberingSettings/NumberingSettings";
 import Users from "./pages/Users/Users";
 import Settings from "./pages/Settings/Settings";
+import Profile from "./pages/Profile/Profile";
 
 export default function App() {
   const { timeStr, dateStr } = useClock();
@@ -197,6 +198,13 @@ export default function App() {
         settings={
           auth.isAuthenticated && auth.user ? (
             <Settings user={auth.user} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+        profile={
+          auth.isAuthenticated && auth.accessToken && auth.user ? (
+            <Profile user={auth.user} />
           ) : (
             <Navigate to="/login" replace />
           )

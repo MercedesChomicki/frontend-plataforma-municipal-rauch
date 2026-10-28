@@ -14,6 +14,7 @@ interface AppRouterProps {
   numbering: ReactElement;
   users: ReactElement;
   settings: ReactElement;
+  profile: ReactElement;
 }
 
 export default function AppRouter({
@@ -29,6 +30,7 @@ export default function AppRouter({
   numbering,
   users,
   settings,
+  profile,
 }: AppRouterProps) {
   return (
     <Routes>
@@ -47,6 +49,8 @@ export default function AppRouter({
       <Route path="/configuracion" element={settings} />
       <Route path="/configuracion/numeracion" element={numbering} />
       <Route path="/configuracion/usuarios" element={users} />
+
+      <Route path="/perfil" element={profile} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

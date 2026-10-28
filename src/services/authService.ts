@@ -70,7 +70,7 @@ export async function iniciarSesion(
     }
 
     throw new Error(
-      `No se pudo iniciar sesión. Intentá nuevamente en unos minutos.'`,
+      'No se pudo iniciar sesión. Intentá nuevamente en unos minutos.',
     );
   }
 

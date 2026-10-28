@@ -1,10 +1,15 @@
-import { useRef, useState } from 'react';
-import { iniciarSesion } from '../services/authService';
-import type { ApiUser, Role } from '../services/authService';
+import { useRef, useState } from "react";
+import { iniciarSesion } from "../services/authService";
+import type { ApiUser, Role } from "../services/authService";
 
 export interface User {
   id: number;
   username: string;
+
+  nombre: string | null;
+  apellido: string | null;
+  email: string | null;
+
   name: string;
   role: string;
   department: string;
@@ -16,44 +21,46 @@ export interface User {
 }
 
 const AREA_LABELS: Record<string, string> = {
-  videoseguridad: 'Centro de Monitoreo',
-  zoonosis: 'Zoonosis',
-  bromatologia: 'Bromatología',
+  videoseguridad: "Centro de Monitoreo",
+  zoonosis: "Zoonosis",
+  bromatologia: "Bromatología",
 };
 
 function adaptarUsuario(apiUser: ApiUser): User {
-  const fullName = [
-    apiUser.nombre,
-    apiUser.apellido,
-  ]
+  const fullName = [apiUser.nombre, apiUser.apellido]
     .filter(Boolean)
-    .join(' ')
+    .join(" ")
     .trim();
 
-  const roleNames = apiUser.roles.map(item => item.nombre);
+  const roleNames = apiUser.roles.map((item) => item.nombre);
 
   if (roleNames.length === 0 && apiUser.rol) {
     roleNames.push(apiUser.rol);
   }
 
-  const role = roleNames
-    .map(name =>
-      name === 'adminDios' ? 'Superadministrador' : name,
-    )
-    .join(', ');
+  const roleLabels: Record<string, string> = {
+    admin: "Administrador de Área",
+    operador: "Operador",
+    supervisor: "Supervisor",
+  };
+
+  const role = roleNames.map((name) => roleLabels[name] ?? name).join(", ");
 
   const area = apiUser.area;
 
   return {
     id: apiUser.id,
     username: apiUser.username,
+    nombre: apiUser.nombre,
+    apellido: apiUser.apellido,
+    email: apiUser.email,
     name: fullName || apiUser.username,
-    role: role || 'Sin rol asignado',
-    department: area 
-      ? AREA_LABELS[area] ?? area 
-      : apiUser.areas_acceso.length > 1 
-        ? 'Todas las áreas'
-        : 'Sin área asignada',
+    role: role || "Sin rol asignado",
+    department: area
+      ? (AREA_LABELS[area] ?? area)
+      : apiUser.areas_acceso.length > 1
+        ? "Todas las áreas"
+        : "Sin área asignada",
     roles: apiUser.roles,
     area,
     permisos: apiUser.permisos,
@@ -64,9 +71,7 @@ function adaptarUsuario(apiUser: ApiUser): User {
 export function useAuth() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(
-    null,
-  );
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,7 +104,7 @@ export function useAuth() {
     setError(null);
 
     if (!username.trim() || !password) {
-      setError('Ingresá tu usuario y contraseña.');
+      setError("Ingresá tu usuario y contraseña.");
       return false;
     }
 
@@ -129,10 +134,10 @@ export function useAuth() {
 
       setError(
         err instanceof TypeError
-          ? 'No pudimos conectar con el sistema. Intentá nuevamente en unos minutos. Si el problema continúa, contactá al administrador.'
+          ? "No pudimos conectar con el sistema. Intentá nuevamente en unos minutos. Si el problema continúa, contactá al administrador."
           : err instanceof Error
             ? err.message
-            : 'Ocurrió un error al iniciar sesión.',
+            : "Ocurrió un error al iniciar sesión.",
       );
 
       return false;

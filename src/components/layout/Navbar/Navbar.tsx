@@ -88,14 +88,24 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
       </nav>
 
       <div className="navbar__account">
-        <span className="navbar__avatar" aria-hidden="true">
+        <NavLink
+          to="/perfil"
+          className="navbar__avatar"
+          aria-label="Ver mi perfil"
+          title="Ver mi perfil"
+        >
           {getInitials(user.name)}
-        </span>
+        </NavLink>
 
-        <div className="navbar__user">
+        <NavLink
+          to="/perfil"
+          className="navbar__user"
+          aria-label={`Ver perfil de ${user.name}`}
+          title="Ver mi perfil"
+        >
           <strong>{user.name}</strong>
           {user.role && <span>{user.role}</span>}
-        </div>
+        </NavLink>
 
         <button
           className="navbar__logout"
