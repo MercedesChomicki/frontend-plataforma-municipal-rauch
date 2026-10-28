@@ -8,6 +8,8 @@ interface NavbarProps {
   user: {
     name: string;
     role?: string;
+    permisos: string[];
+    areas_acceso: string[];
   };
   onLogout: () => void;
 }
@@ -70,6 +72,18 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
         >
           Mapa
         </NavLink>
+
+        {user.permisos.includes("users:read") &&
+          user.areas_acceso.includes("videoseguridad") && (
+            <NavLink
+              to="/configuracion/usuarios"
+              className={({ isActive }) =>
+                `navbar__link${isActive ? " navbar__link--active" : ""}`
+              }
+            >
+              Usuarios
+            </NavLink>
+          )}
       </nav>
 
       <div className="navbar__account">

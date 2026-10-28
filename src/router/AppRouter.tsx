@@ -12,6 +12,7 @@ interface AppRouterProps {
   reports: ReactElement;
   map: ReactElement;
   numbering: ReactElement;
+  users: ReactElement;
 }
 
 export default function AppRouter({
@@ -25,6 +26,7 @@ export default function AppRouter({
   reports,
   map,
   numbering,
+  users,
 }: AppRouterProps) {
   return (
     <Routes>
@@ -40,6 +42,7 @@ export default function AppRouter({
       <Route path="/reportes" element={reports} />
       <Route path="/mapa" element={map} />
       <Route path="/configuracion/numeracion" element={numbering} />
+      <Route path="/configuracion/usuarios" element={users} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
