@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react';
-import municipalLogo from '../../assets/images/logo-letras-blancas.svg';
+import municipalLogo from "../../assets/images/logo.svg";
 import './Login.scss';
 
 interface LoginProps {
@@ -86,7 +86,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             aria-describedby={error ? 'login-error' : undefined}
           >
             <div className="login-card__field">
-              <label htmlFor="login-username">Usuario o correo electrónico</label>
+              <label htmlFor="login-username">Nombre de usuario</label>
               <div className="login-card__input-wrap">
                 <UserRound className="login-card__input-icon" aria-hidden="true" />
                 <input
@@ -96,7 +96,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                   autoComplete="username"
                   autoCapitalize="none"
                   spellCheck={false}
-                  placeholder="Ingresá tu usuario o correo"
+                  placeholder="Ingresá tu nombre de usuario"
                   value={username}
                   onChange={event => setUsername(event.target.value)}
                   required

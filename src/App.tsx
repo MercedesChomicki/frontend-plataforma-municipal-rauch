@@ -2,10 +2,8 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import "./App.scss";
 
 import AppRouter from "./router/AppRouter";
-import useClock from "./hooks/useClock";
 import { useAuth } from "./hooks/useAuth";
 
-import { Header } from "./layouts/Header/Header";
 import Footer from "./components/layout/Footer/Footer";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
@@ -23,7 +21,6 @@ import Settings from "./pages/Settings/Settings";
 import Profile from "./pages/Profile/Profile";
 
 export default function App() {
-  const { timeStr, dateStr } = useClock();
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -44,8 +41,6 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {isAccessPage && <Header timeStr={timeStr} dateStr={dateStr} />}
-
       {showNavbar && auth.user && (
         <Navbar user={auth.user} onLogout={handleLogout} />
       )}

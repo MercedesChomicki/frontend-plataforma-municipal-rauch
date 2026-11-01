@@ -117,13 +117,13 @@ function EvolutionChart({ data }: { data: DailyCount[] }) {
 
       <polygon
         points={`${left},${bottom} ${points} ${right},${bottom}`}
-        fill="rgba(225, 173, 44, 0.12)"
+        fill="rgba(23, 110, 118, 0.10)"
       />
 
       <polyline
         points={points}
         fill="none"
-        stroke="#b98208"
+        stroke="#176e76"
         strokeWidth="2"
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
@@ -140,7 +140,7 @@ function EvolutionChart({ data }: { data: DailyCount[] }) {
               cx={xAt(index)}
               cy={yAt(item.value)}
               r="3"
-              fill="#b98208"
+              fill="#176e76"
             >
               <title>{`${item.label}: ${item.value} eventos`}</title>
             </circle>

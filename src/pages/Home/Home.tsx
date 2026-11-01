@@ -1,28 +1,55 @@
-import "./Home.scss";
-import { ShieldCheck, ArrowRight } from 'lucide-react';
-import municipalLogo from '../../assets/images/logo-letras-blancas.svg';
+import { ArrowRight, Building2, LockKeyhole } from "lucide-react";
 
-/**
- * Componente de la sección Principal / Hero
- */
-export default function Home({ onAccessClick }: { onAccessClick: () => void }) {
+import municipalLogo from "../../assets/images/logo.svg";
+import "./Home.scss";
+
+interface HomeProps {
+  onAccessClick: () => void;
+}
+
+export default function Home({ onAccessClick }: HomeProps) {
   return (
-    <main className="home">
-      <img className="home__logo" src={municipalLogo} alt="Municipalidad de Rauch" />
-      <h1 className="home__title">
-        <span>Sistema Integral de</span>
-        <span className="home__title-accent">Gestión de Eventos</span>
-      </h1>
-      <p className="home__description">
-        Registro y seguimiento de incidentes en la ciudad de Rauch
-      </p>
-      <button className="home__access" onClick={onAccessClick}>
-        <span>Acceder al sistema</span>
-        <ArrowRight aria-hidden="true" />
-      </button>
-      <div className="secure-note">
-        <ShieldCheck aria-hidden="true" />
-        <span>Acceso seguro - Plataforma oficial</span>
+    <main className="home" aria-labelledby="home-title">
+      <div className="home__content">
+        <img
+          className="home__logo"
+          src={municipalLogo}
+          alt="Municipalidad de Rauch"
+        />
+
+        <div className="home__eyebrow">
+          <Building2 aria-hidden="true" />
+          <span>Gestión municipal</span>
+        </div>
+
+        <h1 id="home-title" className="home__title">
+          Sistema Integral de
+          <span>Gestión de Eventos</span>
+        </h1>
+
+        <p className="home__description">
+          Una plataforma para registrar, consultar y dar
+          seguimiento a los eventos de cada área municipal.
+        </p>
+
+        <button
+          className="home__access"
+          type="button"
+          onClick={onAccessClick}
+        >
+          Acceder al sistema
+          <ArrowRight aria-hidden="true" />
+        </button>
+
+        <p className="home__note">
+          <LockKeyhole aria-hidden="true" />
+          Acceso exclusivo para personal autorizado
+        </p>
+
+        <div className="home__institution">
+          <span>Municipalidad de Rauch</span>
+          <span>Subsecretaría de Protección Ciudadana</span>
+        </div>
       </div>
     </main>
   );
