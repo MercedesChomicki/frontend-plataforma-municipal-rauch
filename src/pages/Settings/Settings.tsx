@@ -9,26 +9,27 @@ interface SettingsProps {
 }
 
 export default function Settings({ user }: SettingsProps) {
-  const hasComAccess =
-    user.areas_acceso.includes("videoseguridad");
+  const hasComAccess = user.areas_acceso.includes("videoseguridad");
 
-  const canReadUsers =
-    hasComAccess && user.permisos.includes("users:read");
+  const canReadUsers = hasComAccess && user.permisos.includes("users:read");
 
   const canReadNumbering =
     hasComAccess && user.permisos.includes("eventos:read");
 
-  const canConfigureNumbering =
-    user.permisos.includes("numeracion:configurar");
+  const canConfigureNumbering = user.permisos.includes("numeracion:configurar");
 
   return (
     <main className="settings-page">
       <div className="settings-page__container">
         <header className="settings-page__heading">
-          <p>Centro de Monitoreo</p>
+          <p className="settings-page__eyebrow">
+            Centro de Monitoreo · Municipalidad de Rauch
+          </p>
+
           <h1>Configuración</h1>
-          <p>
-            Accedé a las opciones disponibles según tus permisos.
+
+          <p className="settings-page__intro">
+            Administrá las opciones de tu área según tus permisos.
           </p>
         </header>
 
@@ -41,18 +42,15 @@ export default function Settings({ user }: SettingsProps) {
                 to="/configuracion/usuarios"
                 className="settings-page__card"
               >
-                <span
-                  className="settings-page__icon"
-                  aria-hidden="true"
-                >
+                <span className="settings-page__icon" aria-hidden="true">
                   <UsersRound />
                 </span>
 
                 <h2>Usuarios</h2>
 
                 <p>
-                  Consultá las cuentas del área y gestioná los
-                  operadores según tus permisos.
+                  Consultá las cuentas del área y gestioná los operadores según
+                  tus permisos.
                 </p>
 
                 <span className="settings-page__access">
@@ -67,10 +65,7 @@ export default function Settings({ user }: SettingsProps) {
                 to="/configuracion/numeracion"
                 className="settings-page__card"
               >
-                <span
-                  className="settings-page__icon"
-                  aria-hidden="true"
-                >
+                <span className="settings-page__icon" aria-hidden="true">
                   <Hash />
                 </span>
 

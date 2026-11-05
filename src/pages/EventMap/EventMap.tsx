@@ -7,6 +7,8 @@ import type { EventRecord } from "../../services/eventsService";
 import EventsMap from "../../components/maps/EventsMap/EventsMap";
 import type { MapView } from "../../components/maps/EventsMap/EventsMap";
 
+import { RefreshCw } from "lucide-react";
+
 import "./EventMap.scss";
 
 interface EventMapProps {
@@ -202,19 +204,26 @@ export default function EventMap({ accessToken, onLogout }: EventMapProps) {
       <div className="map-page__container">
         <header className="map-page__heading">
           <div>
+            <p className="map-page__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
+
             <h1>Mapa de eventos</h1>
-            <p>
-              Centro de Monitoreo · Ubicación de los eventos según su fecha de
-              ocurrencia.
+
+            <p className="map-page__intro">
+              Explorá la ubicación y concentración de los eventos de tu área.
             </p>
           </div>
 
           <button
+            className="map-page__refresh"
             type="button"
             disabled={isLoading || sessionExpired}
             onClick={() => setVersion((current) => current + 1)}
+            aria-label="Actualizar datos del mapa"
           >
-            {isLoading ? "Actualizando…" : "Actualizar datos"}
+            <RefreshCw aria-hidden="true" />
+            <span>{isLoading ? "Actualizando…" : "Actualizar"}</span>
           </button>
         </header>
 

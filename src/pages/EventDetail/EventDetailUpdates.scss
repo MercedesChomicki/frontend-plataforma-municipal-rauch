@@ -1,28 +1,16 @@
 .event-detail {
-  &__card + &__card {
-    margin-top: 24px;
-  }
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-  }
   .event-detail__danger {
     border-color: #f1b5b5;
-    color: #a42525;
     background: #fff5f5;
+    color: #a42525;
+
+    &:hover:not(:disabled) {
+      border-color: #df9999;
+      background: #ffebeb;
+      color: #a42525;
+    }
   }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  button:hover:disabled {
-    background: #fff;
-  }
-  &__close-form {
-    margin-top: 20px;
-  }
+
   &__confirm {
     display: flex !important;
     flex-direction: row;
@@ -57,7 +45,7 @@
     font-weight: 600;
   }
   &__history summary:focus-visible {
-    outline: 2px solid #926800;
+    outline: 3px solid #176e76;
     outline-offset: 3px;
   }
   &__history dl {

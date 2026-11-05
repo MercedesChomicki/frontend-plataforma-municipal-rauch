@@ -307,12 +307,18 @@ export default function EditEvent({
     <main className="new-event">
       <header className="new-event__heading">
         <div>
+          <p className="new-event__eyebrow">
+            Centro de Monitoreo · Municipalidad de Rauch
+          </p>
           <h1>
             {event
               ? `Editar evento N.º ${event.numero_evento}`
               : "Editar evento"}
           </h1>
-          <p>Centro de Monitoreo · Corrección del registro</p>
+          <p className="new-event__intro">
+            Corregí la información del registro conservando su número e
+            historial.
+          </p>
         </div>
 
         {!saving && (

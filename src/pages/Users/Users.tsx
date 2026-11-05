@@ -186,14 +186,22 @@ function UsersContent({
       <div className="users-page__container">
         <header className="users-page__heading">
           <div>
-            <p>Configuración · Centro de Monitoreo</p>
+            <p className="users-page__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
+
             <h1>Usuarios</h1>
-            <p>Consultá las cuentas y gestioná su acceso.</p>
+
+            <p className="users-page__intro">
+              Consultá las cuentas del área y gestioná el acceso de los
+              operadores.
+            </p>
           </div>
 
-          <div className="users-page__actions">
+          <div className="users-page__heading-actions">
             {canCreate && (
               <button
+                className="users-page__primary"
                 type="button"
                 disabled={
                   isLoading ||
@@ -210,6 +218,7 @@ function UsersContent({
             )}
 
             <button
+              className="users-page__refresh"
               type="button"
               onClick={onRefresh}
               disabled={isLoading || isSaving || expired || showCreate}

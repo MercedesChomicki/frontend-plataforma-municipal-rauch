@@ -5,7 +5,7 @@ import "./Events.scss";
 import NewEventButton from "../../components/events/NewEventButton/NewEventButton";
 import { Link } from "react-router-dom";
 import type { User } from "../../hooks/useAuth";
-import { Download } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { exportEventsCsv } from "../../utils/exportEventsCsv";
 
 interface EventsProps {
@@ -280,27 +280,38 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
   return (
     <div className="events-page">
       <main className="events-page__main">
-        <div className="events-page__heading">
+        <header className="events-page__heading">
           <div>
+            <p className="events-page__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
+
             <h1>Eventos</h1>
-            <p>Centro de Monitoreo · Consulta de registros</p>
+
+            <p className="events-page__intro">
+              Consultá y realizá el seguimiento de los registros de tu área.
+            </p>
           </div>
 
-          <div className="events-page__actions">
+          <div className="events-page__heading-actions">
             {user.permisos.includes("eventos:write") &&
               user.areas_acceso.includes("videoseguridad") && (
                 <NewEventButton />
               )}
 
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => setVersion((value) => value + 1)}
-            >
-              {isLoading ? "Cargando…" : "Actualizar"}
-            </button>
+            <div className="events-page__update">
+              <button
+                type="button"
+                disabled={isLoading || sessionExpired}
+                onClick={() => setVersion((value) => value + 1)}
+                aria-label="Actualizar listado de eventos"
+              >
+                <RefreshCw aria-hidden="true" />
+                <span>{isLoading ? "Cargando…" : "Actualizar"}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </header>
 
         <section className="events-page__filters" aria-label="Filtros">
           <label className="events-page__search">

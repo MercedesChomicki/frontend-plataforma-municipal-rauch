@@ -151,12 +151,22 @@ function NumberingSettingsContent({
   return (
     <main className="numbering-settings">
       <div className="numbering-settings__container">
-        <header>
+        <header className="numbering-settings__heading">
           <div>
-            <p>Centro de Monitoreo</p>
+            <p className="numbering-settings__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
+
             <h1>Numeración de eventos</h1>
+
+            <p className="numbering-settings__intro">
+              Consultá el contador del área y su configuración inicial.
+            </p>
           </div>
-          <Link to="/eventos">Ver eventos</Link>
+
+          <Link className="numbering-settings__back" to="/configuracion">
+            Volver a configuración
+          </Link>
         </header>
         {!canRead ? (
           <p role="alert">

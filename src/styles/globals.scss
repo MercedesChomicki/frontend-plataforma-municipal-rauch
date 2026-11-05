@@ -73,6 +73,14 @@ a:focus-visible {
   }
 }
 
+html {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -80,5 +88,45 @@ a:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes municipal-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.control-panel__main,
+.events-page__main,
+.reports-page__container,
+.map-page__container,
+.settings-page__container,
+.users-page__container,
+.numbering-settings__container,
+.event-detail__container,
+.profile-page__container,
+.new-event {
+  animation: municipal-page-enter 900ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-panel__main,
+  .events-page__main,
+  .reports-page__container,
+  .map-page__container,
+  .settings-page__container,
+  .users-page__container,
+  .numbering-settings__container,
+  .event-detail__container,
+  .profile-page__container,
+  .new-event {
+    animation: none;
   }
 }

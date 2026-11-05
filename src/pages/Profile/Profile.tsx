@@ -24,15 +24,18 @@ export default function Profile({ user }: ProfileProps) {
       <div className="profile-page__container">
         <header className="profile-page__heading">
           <div>
-            <p>Mi cuenta</p>
+            <p className="profile-page__eyebrow">
+              Mi cuenta · Municipalidad de Rauch
+            </p>
+
             <h1>Perfil de usuario</h1>
-            <p>Consultá tus datos personales y de acceso.</p>
+
+            <p className="profile-page__intro">
+              Consultá tus datos personales y de acceso.
+            </p>
           </div>
 
-          <Link
-            to="/panel"
-            className="profile-page__back"
-          >
+          <Link to="/panel" className="profile-page__back">
             Volver al panel
           </Link>
         </header>
@@ -42,17 +45,12 @@ export default function Profile({ user }: ProfileProps) {
           aria-labelledby="profile-personal-heading"
         >
           <div className="profile-page__identity">
-            <span
-              className="profile-page__avatar"
-              aria-hidden="true"
-            >
+            <span className="profile-page__avatar" aria-hidden="true">
               <UserRound />
             </span>
 
             <div>
-              <h2 id="profile-personal-heading">
-                Datos personales
-              </h2>
+              <h2 id="profile-personal-heading">Datos personales</h2>
               <p>{user.name}</p>
             </div>
           </div>
@@ -84,9 +82,7 @@ export default function Profile({ user }: ProfileProps) {
           className="profile-page__card"
           aria-labelledby="profile-access-heading"
         >
-          <h2 id="profile-access-heading">
-            Acceso al sistema
-          </h2>
+          <h2 id="profile-access-heading">Acceso al sistema</h2>
 
           <dl className="profile-page__grid">
             <div>
@@ -98,7 +94,7 @@ export default function Profile({ user }: ProfileProps) {
               <dt>Área asignada</dt>
               <dd>
                 {user.area
-                  ? AREA_LABELS[user.area] ?? user.area
+                  ? (AREA_LABELS[user.area] ?? user.area)
                   : "Sin área asignada"}
               </dd>
             </div>
@@ -108,10 +104,8 @@ export default function Profile({ user }: ProfileProps) {
               <dd>
                 {user.areas_acceso.length > 0 ? (
                   <ul className="profile-page__areas">
-                    {user.areas_acceso.map(area => (
-                      <li key={area}>
-                        {AREA_LABELS[area] ?? area}
-                      </li>
+                    {user.areas_acceso.map((area) => (
+                      <li key={area}>{AREA_LABELS[area] ?? area}</li>
                     ))}
                   </ul>
                 ) : (
@@ -123,9 +117,8 @@ export default function Profile({ user }: ProfileProps) {
         </section>
 
         <p className="profile-page__note">
-          Los datos corresponden a tu último inicio de sesión.
-          Si necesitás corregirlos, contactá al responsable de
-          administrar tu cuenta.
+          Los datos corresponden a tu último inicio de sesión. Si necesitás
+          corregirlos, contactá al responsable de administrar tu cuenta.
         </p>
       </div>
     </main>

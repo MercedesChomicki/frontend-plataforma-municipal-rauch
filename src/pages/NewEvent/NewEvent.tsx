@@ -281,8 +281,13 @@ export default function NewEvent({ accessToken, onLogout }: NewEventProps) {
     <main className="new-event">
       <div className="new-event__heading">
         <div>
+          <p className="new-event__eyebrow">
+            Centro de Monitoreo · Municipalidad de Rauch
+          </p>
           <h1>Registrar evento</h1>
-          <p>Centro de Monitoreo · Nuevo registro</p>
+          <p className="new-event__intro">
+            Registrá un evento y su ubicación para realizar el seguimiento.
+          </p>
         </div>
 
         {!saving && <Link to="/eventos">Ver eventos</Link>}

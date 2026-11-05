@@ -397,12 +397,17 @@ function EventDetailContent({
       <div className="event-detail__container">
         <header className="event-detail__heading">
           <div>
+            <p className="event-detail__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
             <h1>
               {event
                 ? `Evento N.º ${event.numero_evento}`
                 : "Detalle del evento"}
             </h1>
-            <p>Centro de Monitoreo · Consulta del registro</p>
+            <p className="event-detail__intro">
+              Consultá la información del evento y su historial de operaciones.
+            </p>
           </div>
           <div className="event-detail__actions">
             {!isLoading &&

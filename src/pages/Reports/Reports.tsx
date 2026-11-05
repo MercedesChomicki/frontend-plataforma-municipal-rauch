@@ -422,8 +422,15 @@ export default function Reports({ accessToken, onLogout }: ReportsProps) {
       <div className="reports-page__container">
         <header className="reports-page__heading">
           <div>
+            <p className="reports-page__eyebrow">
+              Centro de Monitoreo · Municipalidad de Rauch
+            </p>
+
             <h1>Reportes</h1>
-            <p>Centro de Monitoreo · Análisis por ocurrencia</p>
+
+            <p className="reports-page__intro">
+              Analizá los eventos de tu área y generá informes por período.
+            </p>
           </div>
         </header>
 
