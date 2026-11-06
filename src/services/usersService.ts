@@ -22,10 +22,11 @@ export class UsersError extends Error {
 
   constructor(status: number) {
     const messages: Record<number, string> = {
+      400: "No se pudieron guardar los datos. Revisá si el usuario o el correo ya están registrados y si la cuenta tiene todos los datos obligatorios.",
       401: "Tu sesión venció. Volvé a ingresar.",
       403: "No tenés permiso para realizar esta operación.",
       404: "La cuenta ya no está disponible.",
-      409: "No se pudo cambiar el estado de esta cuenta.",
+      409: "Los datos entran en conflicto con otro registro. Revisá la información e intentá nuevamente.",
       422: "El sistema rechazó los datos enviados.",
     };
 
@@ -60,17 +61,14 @@ export async function setUserActive(
   userId: number,
   activo: boolean,
 ): Promise<ManagedUser> {
-  const response = await fetch(
-    `${API_URL}/usuarios/${userId}/activo`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ activo }),
+  const response = await fetch(`${API_URL}/usuarios/${userId}/activo`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ activo }),
+  });
 
   if (!response.ok) throw new UsersError(response.status);
 
@@ -79,7 +77,7 @@ export async function setUserActive(
 
 export interface CreateOperatorInput {
   username: string;
-  email?: string;
+  email: string;
   nombre: string;
   apellido: string;
   password: string;
@@ -104,7 +102,7 @@ export async function getOperatorRoleId(
   if (!response.ok) throw new UsersError(response.status);
 
   const roles: UserRole[] = await response.json();
-  const operator = roles.find(role => role.nombre === "operador");
+  const operator = roles.find((role) => role.nombre === "operador");
 
   if (!operator) {
     throw new Error(
@@ -128,7 +126,7 @@ export async function createOperator(
     },
     body: JSON.stringify({
       username: input.username.trim(),
-      email: input.email?.trim() || undefined,
+      email: input.email.trim(),
       nombre: input.nombre.trim(),
       apellido: input.apellido.trim(),
       password: input.password,
@@ -146,6 +144,35 @@ export async function createOperator(
 
     throw new UsersError(response.status);
   }
+
+  return response.json();
+}
+
+export interface UpdateUserDataInput {
+  nombre: string;
+  apellido: string;
+  email: string;
+}
+
+export async function updateUserData(
+  token: string,
+  userId: number,
+  input: UpdateUserDataInput,
+): Promise<ManagedUser> {
+  const response = await fetch(`${API_URL}/usuarios/${userId}/datos`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nombre: input.nombre.trim(),
+      apellido: input.apellido.trim(),
+      email: input.email.trim(),
+    }),
+  });
+
+  if (!response.ok) throw new UsersError(response.status);
 
   return response.json();
 }

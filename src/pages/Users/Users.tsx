@@ -8,7 +8,9 @@ import {
   UsersError,
 } from "../../services/usersService";
 import type { ManagedUser } from "../../services/usersService";
+
 import CreateOperatorForm from "../../components/users/CreateOperatorForm/CreateOperatorForm";
+import EditOperatorForm from "../../components/users/EditOperatorForm/EditOperatorForm";
 
 import "./Users.scss";
 
@@ -79,6 +81,7 @@ function UsersContent({
   const [needsRefresh, setNeedsRefresh] = useState(false);
 
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<ManagedUser | null>(null);
 
   const submitting = useRef(false);
   const mounted = useRef(false);
@@ -209,7 +212,8 @@ function UsersContent({
                   expired ||
                   needsRefresh ||
                   selected !== null ||
-                  showCreate
+                  showCreate ||
+                  editing !== null
                 }
                 onClick={() => setShowCreate(true)}
               >
@@ -221,7 +225,13 @@ function UsersContent({
               className="users-page__refresh"
               type="button"
               onClick={onRefresh}
-              disabled={isLoading || isSaving || expired || showCreate}
+              disabled={
+                isLoading ||
+                isSaving ||
+                expired ||
+                showCreate ||
+                editing !== null
+              }
             >
               Actualizar listado
             </button>
@@ -234,6 +244,18 @@ function UsersContent({
             accessToken={accessToken}
             onCreated={onRefresh}
             onCancel={() => setShowCreate(false)}
+            onSessionExpired={onLogout}
+          />
+        )}
+
+        {editing && (
+          <EditOperatorForm
+            key={`${accessToken}:${editing.id}`}
+            accessToken={accessToken}
+            operator={editing}
+            onSaved={onRefresh}
+            onCancel={() => setEditing(null)}
+            onReload={onRefresh}
             onSessionExpired={onLogout}
           />
         )}
@@ -377,22 +399,41 @@ function UsersContent({
                         {item.id === user.id ? (
                           "Tu cuenta"
                         ) : canManage(item) ? (
-                          <button
-                            type="button"
-                            disabled={
-                              isSaving ||
-                              expired ||
-                              needsRefresh ||
-                              selected !== null ||
-                              showCreate
-                            }
-                            onClick={() => setSelected(item)}
-                            aria-label={`${
-                              item.activo ? "Desactivar" : "Activar"
-                            } cuenta de ${fullName(item)}`}
-                          >
-                            {item.activo ? "Desactivar" : "Activar"}
-                          </button>
+                          <div className="users-page__row-actions">
+                            <button
+                              type="button"
+                              disabled={
+                                isSaving ||
+                                expired ||
+                                needsRefresh ||
+                                selected !== null ||
+                                showCreate ||
+                                editing !== null
+                              }
+                              onClick={() => setEditing(item)}
+                              aria-label={`Editar datos de ${fullName(item)}`}
+                            >
+                              Editar datos
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={
+                                isSaving ||
+                                expired ||
+                                needsRefresh ||
+                                selected !== null ||
+                                showCreate ||
+                                editing !== null
+                              }
+                              onClick={() => setSelected(item)}
+                              aria-label={`${
+                                item.activo ? "Desactivar" : "Activar"
+                              } cuenta de ${fullName(item)}`}
+                            >
+                              {item.activo ? "Desactivar" : "Activar"}
+                            </button>
+                          </div>
                         ) : (
                           "—"
                         )}

@@ -35,15 +35,13 @@ export default function CreateOperatorForm({
     const controller = new AbortController();
 
     void getOperatorRoleId(accessToken, controller.signal)
-      .then(id => {
+      .then((id) => {
         if (!controller.signal.aborted) setRoleId(id);
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
 
-        setExpired(
-          err instanceof UsersError && err.status === 401,
-        );
+        setExpired(err instanceof UsersError && err.status === 401);
 
         setError(
           err instanceof TypeError
@@ -66,12 +64,7 @@ export default function CreateOperatorForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (
-      submitting.current ||
-      roleId === null ||
-      expired ||
-      mustCheckList
-    ) {
+    if (submitting.current || roleId === null || expired || mustCheckList) {
       return;
     }
 
@@ -85,8 +78,18 @@ export default function CreateOperatorForm({
     const password = get("password");
     const confirmation = get("confirmation");
 
-    if (!nombre || !apellido || !username || !password) {
+    if (!nombre || !apellido || !username || !email || !password) {
       setError("Completá los campos obligatorios.");
+      return;
+    }
+
+    const validName = (value: string) =>
+      value.length >= 2 && value.length <= 100 && /\p{L}/u.test(value);
+
+    if (!validName(nombre) || !validName(apellido)) {
+      setError(
+        "Ingresá nombre y apellido de entre 2 y 100 caracteres, con al menos una letra.",
+      );
       return;
     }
 
@@ -112,8 +115,7 @@ export default function CreateOperatorForm({
     } catch (err: unknown) {
       if (!mounted.current) return;
 
-      const sessionExpired =
-        err instanceof UsersError && err.status === 401;
+      const sessionExpired = err instanceof UsersError && err.status === 401;
 
       setExpired(sessionExpired);
 
@@ -122,7 +124,7 @@ export default function CreateOperatorForm({
       const uncertain =
         err instanceof TypeError ||
         (err instanceof UsersError && err.status >= 500) ||
-        (err instanceof SyntaxError);
+        err instanceof SyntaxError;
 
       setMustCheckList(uncertain);
 
@@ -140,11 +142,7 @@ export default function CreateOperatorForm({
   }
 
   const blocked =
-    loadingRole ||
-    roleId === null ||
-    isSaving ||
-    expired ||
-    mustCheckList;
+    loadingRole || roleId === null || isSaving || expired || mustCheckList;
 
   return (
     <section
@@ -154,13 +152,11 @@ export default function CreateOperatorForm({
       <h2 id="create-operator-heading">Crear operador</h2>
 
       <p>
-        La cuenta tendrá el rol Operador y pertenecerá al
-        Centro de Monitoreo. Los campos con * son obligatorios.
+        La cuenta tendrá el rol Operador y pertenecerá al Centro de Monitoreo.
+        Los campos con * son obligatorios.
       </p>
 
-      {loadingRole && (
-        <p role="status">Preparando formulario…</p>
-      )}
+      {loadingRole && <p role="status">Preparando formulario…</p>}
 
       <form onSubmit={handleSubmit} aria-busy={isSaving}>
         <fieldset disabled={blocked}>
@@ -172,6 +168,8 @@ export default function CreateOperatorForm({
               <input
                 name="nombre"
                 autoComplete="given-name"
+                minLength={2}
+                maxLength={100}
                 required
               />
             </label>
@@ -181,6 +179,8 @@ export default function CreateOperatorForm({
               <input
                 name="apellido"
                 autoComplete="family-name"
+                minLength={2}
+                maxLength={100}
                 required
               />
             </label>
@@ -197,12 +197,8 @@ export default function CreateOperatorForm({
             </label>
 
             <label>
-              Correo electrónico
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-              />
+              Correo electrónico *
+              <input name="email" type="email" autoComplete="email" required />
             </label>
 
             <label>
@@ -240,11 +236,7 @@ export default function CreateOperatorForm({
         )}
 
         <div className="users-page__actions">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSaving}
-          >
+          <button type="button" onClick={onCancel} disabled={isSaving}>
             {mustCheckList ? "Cerrar formulario" : "Cancelar"}
           </button>
 
