@@ -1,6 +1,7 @@
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:8000"
 ).replace(/\/+$/, "");
+
 export interface EventClosure {
   origen: string | null;
   usuario_id: number | null;
@@ -9,6 +10,7 @@ export interface EventClosure {
   fecha: string | null;
   observaciones: string | null;
 }
+
 export interface EventCancellation {
   usuario_id: number | null;
   nombre: string | null;
@@ -16,6 +18,30 @@ export interface EventCancellation {
   fecha: string | null;
   motivo: string | null;
 }
+
+export interface OriginalRegistration {
+  fecha: string | null;
+  responsable_nombre: string | null;
+  responsable_apellido: string | null;
+  area: string;
+  turno: string | null;
+  referencia: string | null;
+}
+
+export interface OriginalClosure {
+  nombre: string | null;
+  apellido: string | null;
+  fecha: string | null;
+  observaciones: string | null;
+}
+
+export interface EventDigitization {
+  usuario_id: number;
+  nombre: string | null;
+  apellido: string | null;
+  fecha: string;
+}
+
 export interface EventRecord {
   id: number;
   numero_evento: number;
@@ -27,8 +53,8 @@ export interface EventRecord {
   fecha_creacion: string;
   fecha_actualizacion?: string | null;
   direccion: string | null;
-  latitud: number;
-  longitud: number;
+  latitud: number | null;
+  longitud: number | null;
   turno: string | null;
   servicio_actuante: string | null;
   recibio_nombre: string | null;
@@ -38,7 +64,11 @@ export interface EventRecord {
   observaciones_cierre: string | null;
   cierre?: EventClosure | null;
   anulacion?: EventCancellation | null;
+  modalidad?: "nuevo" | "historico";
+  registro_original?: OriginalRegistration | null;
+  digitalizacion?: EventDigitization | null;
 }
+
 export interface EventAudit {
   id: number;
   evento_id: number | null;
@@ -52,6 +82,7 @@ export interface EventAudit {
   fecha: string | null;
   detalle: Record<string, unknown> | null;
 }
+
 export class EventsError extends Error {
   readonly status: number;
   constructor(message: string, status: number) {
@@ -60,6 +91,7 @@ export class EventsError extends Error {
     this.status = status;
   }
 }
+
 function requestError(status: number): EventsError {
   const messages: Record<number, string> = {
     400: "No se pudo realizar la operación. Revisá los datos ingresados.",
@@ -75,6 +107,7 @@ function requestError(status: number): EventsError {
     status,
   );
 }
+
 export async function getEvents(
   token: string,
   signal: AbortSignal,
@@ -100,19 +133,20 @@ export async function getEvents(
   }
   return [...unique.values()];
 }
+
 export interface EventType {
   id: number;
   area: string;
   nombre: string;
 }
-export interface CreateEventInput {
+
+interface CreateEventCommon {
   tipo_evento_id: number;
   descripcion: string;
   fuente: "manual";
-  estado: "abierto";
   fecha_ocurrencia: string;
-  latitud: number;
-  longitud: number;
+  latitud?: number;
+  longitud?: number;
   turno?: string;
   direccion: string;
   origen?: string;
@@ -120,6 +154,27 @@ export interface CreateEventInput {
   recibio_funcion?: string;
   servicio_actuante_id?: number;
 }
+
+export type CreateEventInput =
+  | (CreateEventCommon & {
+      modalidad: "nuevo";
+      estado: "abierto";
+    })
+  | (CreateEventCommon & {
+      modalidad: "historico";
+      numero_evento: number;
+      registro_original: OriginalRegistration;
+    } & (
+        | {
+            estado: "abierto";
+            cierre_original?: never;
+          }
+        | {
+            estado: "cerrado";
+            cierre_original: OriginalClosure;
+          }
+      ));
+
 export async function getEventTypes(
   token: string,
   signal: AbortSignal,
@@ -132,6 +187,7 @@ export async function getEventTypes(
   const types: EventType[] = await response.json();
   return types.filter((type) => type.area === "videoseguridad");
 }
+
 export async function createEvent(
   token: string,
   input: CreateEventInput,
@@ -147,6 +203,7 @@ export async function createEvent(
   if (!response.ok) throw requestError(response.status);
   return response.json();
 }
+
 export async function getEvent(
   token: string,
   id: number,
@@ -159,6 +216,7 @@ export async function getEvent(
   if (!response.ok) throw requestError(response.status);
   return response.json();
 }
+
 export async function closeEvent(
   token: string,
   id: number,
@@ -177,6 +235,7 @@ export async function closeEvent(
   if (!response.ok) throw requestError(response.status);
   return response.json();
 }
+
 export interface UpdateEventInput {
   descripcion?: string;
   fecha_ocurrencia?: string;
@@ -187,6 +246,7 @@ export interface UpdateEventInput {
   recibio_nombre?: string;
   recibio_funcion?: string;
 }
+
 export async function updateEvent(
   token: string,
   id: number,
@@ -213,6 +273,7 @@ export async function updateEvent(
   if (!response.ok) throw requestError(response.status);
   return response.json();
 }
+
 export async function cancelEvent(
   token: string,
   id: number,
@@ -231,6 +292,7 @@ export async function cancelEvent(
   if (!response.ok) throw requestError(response.status);
   return response.json();
 }
+
 export async function getEventHistory(
   token: string,
   id: number,

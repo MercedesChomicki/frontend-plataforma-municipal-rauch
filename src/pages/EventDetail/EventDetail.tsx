@@ -473,8 +473,18 @@ function EventDetailContent({
                   <dd>{formatDate(event.fecha_ocurrencia)}</dd>
                 </div>
                 <div>
-                  <dt>Fecha y hora de incorporación al sistema</dt>
-                  <dd>{formatDate(event.fecha_creacion)}</dd>
+                  <dt>
+                    {event.modalidad === "historico"
+                      ? "Fecha y hora de digitalización"
+                      : "Fecha y hora de incorporación al sistema"}
+                  </dt>
+                  <dd>
+                    {formatDate(
+                      event.modalidad === "historico"
+                        ? (event.digitalizacion?.fecha ?? event.fecha_creacion)
+                        : event.fecha_creacion,
+                    )}
+                  </dd>
                 </div>
                 <div className="event-detail__wide">
                   <dt>Dirección</dt>
@@ -488,26 +498,75 @@ function EventDetailContent({
                       : "Sin información"}
                   </dd>
                 </div>
-                <div>
-                  <dt>Recibido por</dt>
-                  <dd>{event.recibio_nombre || "Sin información"}</dd>
-                </div>
-                <div>
-                  <dt>Jerarquía o función</dt>
-                  <dd>{event.recibio_funcion || "Sin información"}</dd>
-                </div>
+                {event.modalidad !== "historico" && (
+                  <>
+                    <div>
+                      <dt>Recibido por</dt>
+                      <dd>{event.recibio_nombre || "Sin información"}</dd>
+                    </div>
+                    <div>
+                      <dt>Jerarquía o función</dt>
+                      <dd>{event.recibio_funcion || "Sin información"}</dd>
+                    </div>
+                  </>
+                )}
                 <div className="event-detail__wide">
                   <dt>Descripción</dt>
                   <dd>{event.descripcion || "Sin descripción"}</dd>
                 </div>
               </dl>
             </section>
+            {event.modalidad === "historico" && (
+              <section
+                className="event-detail__card"
+                aria-labelledby="event-original-heading"
+              >
+                <h2 id="event-original-heading">Registro original en papel</h2>
+
+                <dl className="event-detail__grid">
+                  <div>
+                    <dt>Fecha y hora del registro original</dt>
+                    <dd>{formatDate(event.registro_original?.fecha)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Turno del registro original</dt>
+                    <dd>
+                      {event.registro_original?.turno
+                        ? label(event.registro_original.turno)
+                        : "Sin información"}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>Recibido por</dt>
+                    <dd>{event.recibio_nombre || "Sin información"}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Jerarquía o función</dt>
+                    <dd>{event.recibio_funcion || "Sin información"}</dd>
+                  </div>
+
+                  <div className="event-detail__wide">
+                    <dt>Libro, folio o página</dt>
+                    <dd>
+                      {event.registro_original?.referencia || "Sin información"}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            )}
             {event.estado === "cerrado" && (
               <section
                 className="event-detail__card"
                 aria-labelledby="event-closure-heading"
               >
-                <h2 id="event-closure-heading">Información de cierre</h2>
+                <h2 id="event-closure-heading">
+                  {event.cierre?.origen === "historico"
+                    ? "Cierre original en papel"
+                    : "Información de cierre"}
+                </h2>
                 <dl className="event-detail__grid">
                   <div>
                     <dt>Fecha y hora de cierre</dt>
