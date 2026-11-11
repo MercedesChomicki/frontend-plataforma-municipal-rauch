@@ -268,6 +268,11 @@ export default function NewEvent({
       return;
     }
 
+    if (mode === "nuevo" && Date.parse(occurrence) > Date.now()) {
+      setError("La fecha y hora de ocurrencia no pueden estar en el futuro.");
+      return;
+    }
+
     if (!values.description.trim() || !values.address.trim()) {
       setError("Completá la descripción y la dirección o referencia.");
       return;

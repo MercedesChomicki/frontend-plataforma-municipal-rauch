@@ -86,8 +86,8 @@ function toFormValues(event: EventRecord): FormValues {
     occurrence: toLocalOccurrence(event.fecha_ocurrencia),
     description: event.descripcion ?? "",
     address: event.direccion ?? "",
-    latitude: String(event.latitud),
-    longitude: String(event.longitud),
+    latitude: event.latitud == null ? "" : String(event.latitud),
+    longitude: event.longitud == null ? "" : String(event.longitud),
     shift: event.turno ?? "",
     receivedBy: event.recibio_nombre ?? "",
     receivedRole: event.recibio_funcion ?? "",
@@ -205,19 +205,51 @@ export default function EditEvent({
       return;
     }
 
+    if (values.occurrence !== toLocalOccurrence(event.fecha_ocurrencia)) {
+      const occurrenceTime = Date.parse(occurrence);
+      const isHistorical = event.modalidad === "historico";
+      const registrationDate = isHistorical
+        ? event.registro_original?.fecha
+        : event.fecha_creacion;
+      const closureDate = event.cierre?.fecha ?? event.fecha_cierre;
+
+      if (registrationDate && occurrenceTime > Date.parse(registrationDate)) {
+        setSaveError(
+          isHistorical
+            ? "La ocurrencia no puede ser posterior al registro original en papel."
+            : "La ocurrencia no puede ser posterior al registro del evento en el sistema.",
+        );
+        return;
+      }
+
+      if (closureDate && occurrenceTime > Date.parse(closureDate)) {
+        setSaveError(
+          "La ocurrencia no puede ser posterior al cierre del evento.",
+        );
+        return;
+      }
+    }
+
+    const hasLatitude = values.latitude.trim() !== "";
+    const hasLongitude = values.longitude.trim() !== "";
+
+    if (hasLatitude !== hasLongitude) {
+      setSaveError("Completá ambas coordenadas o dejá las dos vacías.");
+      return;
+    }
+
     const latitude = Number(values.latitude);
     const longitude = Number(values.longitude);
 
     if (
-      !values.latitude.trim() ||
-      !values.longitude.trim() ||
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude) ||
-      latitude < -90 ||
-      latitude > 90 ||
-      longitude < -180 ||
-      longitude > 180 ||
-      (latitude === 0 && longitude === 0)
+      hasLatitude &&
+      (!Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180 ||
+        (latitude === 0 && longitude === 0))
     ) {
       setSaveError("Seleccioná una ubicación válida o revisá las coordenadas.");
       return;
@@ -254,11 +286,12 @@ export default function EditEvent({
       input.fecha_ocurrencia = occurrence;
     }
 
-    if (latitude !== event.latitud) {
+    if (
+      hasLatitude &&
+      hasLongitude &&
+      (latitude !== event.latitud || longitude !== event.longitud)
+    ) {
       input.latitud = latitude;
-    }
-
-    if (longitude !== event.longitud) {
       input.longitud = longitude;
     }
 
@@ -435,18 +468,10 @@ export default function EditEvent({
               <legend>Ubicación</legend>
 
               <div className="new-event__grid">
-                <label className="new-event__wide">
-                  Dirección o referencia de ubicación *
-                  <input
-                    required
-                    type="text"
-                    value={values.address}
-                    onChange={(e) => update("address", e.target.value)}
-                  />
-                </label>
-
                 <div className="new-event__wide">
                   <LocationPicker
+                    address={values.address}
+                    onAddressChange={(address) => update("address", address)}
                     latitude={values.latitude}
                     longitude={values.longitude}
                     disabled={saving || sessionExpired || !canEdit}
@@ -455,9 +480,8 @@ export default function EditEvent({
                 </div>
 
                 <label>
-                  Latitud *
+                  Latitud
                   <input
-                    required
                     type="number"
                     step="any"
                     min="-90"
@@ -468,9 +492,8 @@ export default function EditEvent({
                 </label>
 
                 <label>
-                  Longitud *
+                  Longitud
                   <input
-                    required
                     type="number"
                     step="any"
                     min="-180"

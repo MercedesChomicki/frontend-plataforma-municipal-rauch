@@ -10,6 +10,25 @@ import type { EventRecord } from "../../../services/eventsService";
 
 import "leaflet.heat";
 
+type LocatedEvent = EventRecord & {
+  latitud: number;
+  longitud: number;
+};
+
+function hasValidCoordinates(event: EventRecord): event is LocatedEvent {
+  return (
+    typeof event.latitud === "number" &&
+    typeof event.longitud === "number" &&
+    Number.isFinite(event.latitud) &&
+    Number.isFinite(event.longitud) &&
+    event.latitud >= -90 &&
+    event.latitud <= 90 &&
+    event.longitud >= -180 &&
+    event.longitud <= 180 &&
+    !(event.latitud === 0 && event.longitud === 0)
+  );
+}
+
 export type MapView = "events" | "heat";
 
 interface EventsMapProps {
@@ -158,6 +177,8 @@ export default function EventsMap({
 
     if (!map || !clusters || !heat) return;
 
+    const locatedEvents = events.filter(hasValidCoordinates);
+
     if (map.hasLayer(clusters)) {
       map.removeLayer(clusters);
     }
@@ -169,7 +190,7 @@ export default function EventsMap({
     clusters.clearLayers();
 
     if (view === "heat") {
-      const heatPoints: L.HeatLatLngTuple[] = events.map((event) => [
+      const heatPoints: L.HeatLatLngTuple[] = locatedEvents.map((event) => [
         event.latitud,
         event.longitud,
         1,
@@ -184,7 +205,7 @@ export default function EventsMap({
       return;
     }
 
-    for (const event of events) {
+    for (const event of locatedEvents) {
       const color = markerColor(event.estado);
 
       const icon = L.divIcon({
@@ -223,16 +244,19 @@ export default function EventsMap({
   // Cambiar de vista conserva la posición y el zoom.
   useEffect(() => {
     const map = mapRef.current;
-
     if (!map) return;
 
-    if (events.length === 0) {
+    const locatedEvents = events.filter(hasValidCoordinates);
+
+    if (locatedEvents.length === 0) {
       map.setView(RAUCH_CENTER, 14);
       return;
     }
 
     const bounds = L.latLngBounds(
-      events.map((event): L.LatLngTuple => [event.latitud, event.longitud]),
+      locatedEvents.map(
+        (event): L.LatLngTuple => [event.latitud, event.longitud],
+      ),
     );
 
     map.fitBounds(bounds, {

@@ -1,8 +1,8 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import * as L from 'leaflet';
+import { useEffect, useId, useRef, useState } from "react";
+import * as L from "leaflet";
 
-import 'leaflet/dist/leaflet.css';
-import './LocationPicker.scss';
+import "leaflet/dist/leaflet.css";
+import "./LocationPicker.scss";
 
 export interface LocationValue {
   latitude: number;
@@ -10,6 +10,8 @@ export interface LocationValue {
 }
 
 interface LocationPickerProps {
+  address: string;
+  onAddressChange: (address: string) => void;
   latitude: string;
   longitude: string;
   disabled?: boolean;
@@ -43,6 +45,8 @@ function parseLocation(
 }
 
 export default function LocationPicker({
+  address,
+  onAddressChange,
   latitude,
   longitude,
   disabled = false,
@@ -90,7 +94,7 @@ export default function LocationPicker({
     }).setView(RAUCH_CENTER, 14);
 
     const tiles = L.tileLayer(
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
         attribution:
@@ -98,7 +102,7 @@ export default function LocationPicker({
       },
     );
 
-    tiles.on('tileerror', () => setTilesError(true));
+    tiles.on("tileerror", () => setTilesError(true));
     tiles.addTo(map);
 
     function selectLocation(event: L.LeafletMouseEvent) {
@@ -128,18 +132,14 @@ export default function LocationPicker({
             ? map.getSize().y
             : 1;
 
-      map.panBy(
-        [
-          event.deltaX * multiplier,
-          event.deltaY * multiplier,
-        ],
-        { animate: false },
-      );
+      map.panBy([event.deltaX * multiplier, event.deltaY * multiplier], {
+        animate: false,
+      });
     }
 
-    map.on('click', selectLocation);
+    map.on("click", selectLocation);
 
-    container.addEventListener('wheel', handleWheel, {
+    container.addEventListener("wheel", handleWheel, {
       passive: false,
       capture: true,
     });
@@ -153,7 +153,7 @@ export default function LocationPicker({
 
     return () => {
       observer.disconnect();
-      container.removeEventListener('wheel', handleWheel, true);
+      container.removeEventListener("wheel", handleWheel, true);
 
       map.remove();
 
@@ -168,24 +168,18 @@ export default function LocationPicker({
 
     if (!map) return;
 
-    if (
-      selectedLatitude === null ||
-      selectedLongitude === null
-    ) {
+    if (selectedLatitude === null || selectedLongitude === null) {
       markerRef.current?.remove();
       markerRef.current = null;
       return;
     }
 
-    const position: L.LatLngTuple = [
-      selectedLatitude,
-      selectedLongitude,
-    ];
+    const position: L.LatLngTuple = [selectedLatitude, selectedLongitude];
 
     if (!markerRef.current) {
       const icon = L.divIcon({
-        className: 'location-picker__marker',
-        html: '<span></span>',
+        className: "location-picker__marker",
+        html: "<span></span>",
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       });
@@ -194,20 +188,17 @@ export default function LocationPicker({
         icon,
         draggable: !disabledRef.current,
         keyboard: true,
-        title: 'Ubicación seleccionada',
-        alt: 'Ubicación seleccionada del evento',
+        title: "Ubicación seleccionada",
+        alt: "Ubicación seleccionada del evento",
       }).addTo(map);
 
-      marker.on('dragend', () => {
+      marker.on("dragend", () => {
         if (disabledRef.current) return;
 
         const nextPosition = marker.getLatLng().wrap();
 
         // Impide conservar una ubicación fuera del rango admitido.
-        if (
-          nextPosition.lat < -90 ||
-          nextPosition.lat > 90
-        ) {
+        if (nextPosition.lat < -90 || nextPosition.lat > 90) {
           marker.setLatLng(position);
           return;
         }
@@ -232,14 +223,21 @@ export default function LocationPicker({
   }, [selectedLatitude, selectedLongitude]);
 
   return (
-    <div
-      className="location-picker"
-      aria-disabled={disabled}
-    >
+    <div className="location-picker" aria-disabled={disabled}>
+      <label>
+        Dirección o referencia de ubicación *
+        <input
+          type="text"
+          value={address}
+          onChange={(event) => onAddressChange(event.target.value)}
+          disabled={disabled}
+          required
+        />
+      </label>
       <p id={helpId} className="location-picker__help">
-        Hacé clic para seleccionar la ubicación o arrastrá el
-        marcador para ajustarla. Deslizá dos dedos para desplazarte
-        y mantené Ctrl para acercar o alejar.
+        Hacé clic para seleccionar la ubicación o arrastrá el marcador para
+        ajustarla. Deslizá dos dedos para desplazarte y mantené Ctrl para
+        acercar o alejar.
       </p>
 
       <div
@@ -253,18 +251,18 @@ export default function LocationPicker({
       <p className="location-picker__status" role="status">
         {location
           ? `Ubicación seleccionada: ${location.latitude}, ${location.longitude}.`
-          : 'Seleccioná una ubicación en el mapa o completá las coordenadas.'}
+          : "Seleccioná una ubicación en el mapa o completá las coordenadas."}
       </p>
 
       <p className="location-picker__note">
-        La dirección se completa manualmente. Mover el marcador
-        no modifica ese campo.
+        La dirección se completa manualmente. Mover el marcador no modifica ese
+        campo.
       </p>
 
       {tilesError && (
         <p className="location-picker__error" role="status">
-          No pudimos cargar parte del mapa. Podés completar las
-          coordenadas manualmente.
+          No pudimos cargar parte del mapa. Podés completar las coordenadas
+          manualmente.
         </p>
       )}
     </div>

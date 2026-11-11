@@ -94,6 +94,9 @@ export default function App() {
               <NewEvent
                 accessToken={auth.accessToken}
                 onLogout={handleLogout}
+                canConfigureNumbering={auth.user.permisos.includes(
+                  "numeracion:configurar",
+                )}
               />
             ) : (
               <Navigate to="/eventos" replace />
