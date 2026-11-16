@@ -100,6 +100,10 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
+  const canViewCancelled =
+    user.areas_acceso.includes("videoseguridad") &&
+    user.permisos.includes("eventos:anular");
+
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
@@ -116,7 +120,7 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
 
       try {
         const result = await getEvents(accessToken, controller.signal, {
-          includeCancelled: true,
+          includeCancelled: canViewCancelled,
         });
 
         if (active) setEvents(result);
@@ -143,7 +147,7 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
       active = false;
       controller.abort();
     };
-  }, [accessToken, version]);
+  }, [accessToken, version, canViewCancelled]);
 
   function changeFilter(update: () => void) {
     update();
@@ -337,7 +341,7 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
               <option value="">Todos</option>
               <option value="abierto">Abierto</option>
               <option value="cerrado">Cerrado</option>
-              <option value="anulado">Anulado</option>
+              {canViewCancelled && <option value="anulado">Anulado</option>}
             </select>
           </label>
 
@@ -467,9 +471,11 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
               <span>
                 Cerrados: <strong>{closedCount}</strong>
               </span>
-              <span>
-                Anulados: <strong>{cancelledCount}</strong>
-              </span>
+              {canViewCancelled && (
+                <span>
+                  Anulados: <strong>{cancelledCount}</strong>
+                </span>
+              )}
               <span>
                 Seleccionados: <strong>{selected.size}</strong>
               </span>

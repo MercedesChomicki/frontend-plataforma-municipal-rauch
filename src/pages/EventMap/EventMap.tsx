@@ -319,11 +319,9 @@ export default function EventMap({ accessToken, onLogout }: EventMapProps) {
             )}
 
             <p className="map-page__summary" role="status">
-              {locatedEvents.length} eventos ubicados de {filtered.length}{" "}
-              resultados.
-              {missingCoordinates > 0 && (
-                <> {missingCoordinates} sin coordenadas válidas.</>
-              )}
+              Resultados: {filtered.length} · Con ubicación en el mapa:{" "}
+              {locatedEvents.length} · Sin ubicación en el mapa:{" "}
+              {missingCoordinates}
             </p>
 
             {view === "events" && (

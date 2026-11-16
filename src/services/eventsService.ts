@@ -129,7 +129,13 @@ export async function getEvents(
   );
   const unique = new Map<number, EventRecord>();
   for (const event of groups.flat()) {
-    if (event.area === "videoseguridad") unique.set(event.id, event);
+    if (event.area !== "videoseguridad") continue;
+
+    if (event.estado === "anulado" && !options.includeCancelled) {
+      continue;
+    }
+
+    unique.set(event.id, event);
   }
   return [...unique.values()];
 }

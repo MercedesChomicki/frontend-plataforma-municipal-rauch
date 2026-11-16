@@ -340,6 +340,7 @@ function EventDetailContent({
       controller.abort();
     };
   }, [id, accessToken]);
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (
@@ -392,6 +393,29 @@ function EventDetailContent({
       if (current === generation.current) setSaving(false);
     }
   }
+
+  if (
+    event?.estado === "anulado" &&
+    !(
+      user.areas_acceso.includes(event.area) &&
+      user.permisos.includes("eventos:anular")
+    )
+  ) {
+    return (
+      <main className="event-detail">
+        <div className="event-detail__container">
+          <h1>Evento no disponible</h1>
+
+          <p role="alert">No tenés permiso para consultar este evento.</p>
+
+          <Link to="/eventos" className="event-detail__secondary">
+            Ver eventos
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="event-detail">
       <div className="event-detail__container">
