@@ -102,7 +102,7 @@ export default function Events({ accessToken, user, onLogout }: EventsProps) {
 
   const canViewCancelled =
     user.areas_acceso.includes("videoseguridad") &&
-    user.permisos.includes("eventos:anular");
+    user.permisos.includes("eventos:ver_anulados");
 
   useEffect(() => {
     const controller = new AbortController();

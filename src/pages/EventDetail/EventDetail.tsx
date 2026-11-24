@@ -398,7 +398,7 @@ function EventDetailContent({
     event?.estado === "anulado" &&
     !(
       user.areas_acceso.includes(event.area) &&
-      user.permisos.includes("eventos:anular")
+      user.permisos.includes("eventos:ver_anulados")
     )
   ) {
     return (
