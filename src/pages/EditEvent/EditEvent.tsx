@@ -18,6 +18,8 @@ import type { User } from "../../hooks/useAuth";
 import LocationPicker from "../../components/maps/LocationPicker/LocationPicker";
 import type { LocationValue } from "../../components/maps/LocationPicker/LocationPicker";
 
+import ActingServiceSelect from "../../components/events/ActingServiceSelect/ActingServiceSelect";
+
 import "../NewEvent/NewEvent.scss";
 
 interface EditEventProps {
@@ -33,6 +35,7 @@ interface FormValues {
   latitude: string;
   longitude: string;
   shift: string;
+  serviceId: string;
   receivedBy: string;
   receivedRole: string;
 }
@@ -44,6 +47,7 @@ const initialValues: FormValues = {
   latitude: "",
   longitude: "",
   shift: "",
+  serviceId: "",
   receivedBy: "",
   receivedRole: "",
 };
@@ -89,6 +93,10 @@ function toFormValues(event: EventRecord): FormValues {
     latitude: event.latitud == null ? "" : String(event.latitud),
     longitude: event.longitud == null ? "" : String(event.longitud),
     shift: event.turno ?? "",
+    serviceId:
+      event.servicio_actuante_id == null
+        ? ""
+        : String(event.servicio_actuante_id),
     receivedBy: event.recibio_nombre ?? "",
     receivedRole: event.recibio_funcion ?? "",
   };
@@ -299,6 +307,16 @@ export default function EditEvent({
       input.turno = values.shift;
     }
 
+    const originalServiceId =
+      event.servicio_actuante_id == null
+        ? ""
+        : String(event.servicio_actuante_id);
+
+    if (values.serviceId !== originalServiceId) {
+      input.servicio_actuante_id =
+        values.serviceId === "" ? null : Number(values.serviceId);
+    }
+
     if (receivedBy !== (event.recibio_nombre ?? "")) {
       input.recibio_nombre = receivedBy;
     }
@@ -397,7 +415,6 @@ export default function EditEvent({
             <strong>{label(event.estado)}</strong>.
             {event.estado === "cerrado" &&
               " La corrección conservará los datos del cierre."}{" "}
-            Las fechas se ingresan en horario argentino.
           </p>
 
           <form onSubmit={handleSubmit} aria-busy={saving}>
@@ -410,14 +427,14 @@ export default function EditEvent({
                   <p>{label(event.tipo_evento)}</p>
                 </div>
 
-                <div>
-                  <strong>Servicio actuante</strong>
-                  <p>
-                    {event.servicio_actuante
-                      ? label(event.servicio_actuante)
-                      : "Sin información"}
-                  </p>
-                </div>
+                <ActingServiceSelect
+                  accessToken={accessToken}
+                  value={values.serviceId}
+                  currentLabel={event.servicio_actuante}
+                  onChange={(value) => update("serviceId", value)}
+                  disabled={saving || sessionExpired || !canEdit}
+                  onSessionExpired={onLogout}
+                />
 
                 <label>
                   Fecha y hora de ocurrencia *

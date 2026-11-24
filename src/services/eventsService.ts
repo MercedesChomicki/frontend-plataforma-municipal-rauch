@@ -57,6 +57,7 @@ export interface EventRecord {
   longitud: number | null;
   turno: string | null;
   servicio_actuante: string | null;
+  servicio_actuante_id: number | null;
   recibio_nombre: string | null;
   recibio_funcion: string | null;
   fecha_cierre: string | null;
@@ -90,6 +91,27 @@ export class EventsError extends Error {
     this.name = "EventsError";
     this.status = status;
   }
+}
+
+export interface ActingService {
+  id: number;
+  nombre: string;
+}
+
+export async function getActingServices(
+  token: string,
+  signal: AbortSignal,
+): Promise<ActingService[]> {
+  const response = await fetch(`${API_URL}/servicios-actuantes/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    signal,
+  });
+
+  if (!response.ok) throw requestError(response.status);
+
+  return response.json();
 }
 
 function requestError(status: number): EventsError {
@@ -251,6 +273,7 @@ export interface UpdateEventInput {
   turno?: string;
   recibio_nombre?: string;
   recibio_funcion?: string;
+  servicio_actuante_id?: number | null;
 }
 
 export async function updateEvent(
@@ -267,6 +290,7 @@ export async function updateEvent(
     turno: input.turno,
     recibio_nombre: input.recibio_nombre,
     recibio_funcion: input.recibio_funcion,
+    servicio_actuante_id: input.servicio_actuante_id,
   };
   const response = await fetch(`${API_URL}/eventos/${id}`, {
     method: "PUT",

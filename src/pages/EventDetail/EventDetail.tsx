@@ -510,11 +510,11 @@ function EventDetailContent({
                     )}
                   </dd>
                 </div>
-                <div className="event-detail__wide">
+                <div>
                   <dt>Dirección</dt>
                   <dd>{event.direccion || "Sin información"}</dd>
                 </div>
-                <div className="event-detail__wide">
+                <div>
                   <dt>Servicio actuante</dt>
                   <dd>
                     {event.servicio_actuante

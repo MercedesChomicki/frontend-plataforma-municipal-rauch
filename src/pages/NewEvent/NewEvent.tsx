@@ -23,6 +23,7 @@ import {
 } from "../../services/numberingService";
 
 import type { AreaNumbering } from "../../services/numberingService";
+import ActingServiceSelect from "../../components/events/ActingServiceSelect/ActingServiceSelect";
 
 import "./NewEvent.scss";
 
@@ -40,6 +41,7 @@ interface FormValues {
   latitude: string;
   longitude: string;
   shift: string;
+  serviceId: string;
   receivedBy: string;
   receivedRole: string;
 }
@@ -52,6 +54,7 @@ const initialValues: FormValues = {
   latitude: "",
   longitude: "",
   shift: "",
+  serviceId: "",
   receivedBy: "",
   receivedRole: "",
 };
@@ -310,6 +313,9 @@ export default function NewEvent({
       fecha_ocurrencia: occurrence,
       direccion: values.address.trim(),
       turno: values.shift || undefined,
+      servicio_actuante_id: values.serviceId
+        ? Number(values.serviceId)
+        : undefined,
       recibio_nombre: values.receivedBy.trim() || undefined,
       recibio_funcion: values.receivedRole.trim() || undefined,
       ...(hasLatitude ? { latitud: latitude, longitud: longitude } : {}),
@@ -507,7 +513,6 @@ export default function NewEvent({
         {mode === "nuevo"
           ? "El número se asignará al guardar y el evento comenzará abierto."
           : "Se conservarán el número y los datos del registro en papel. La carga histórica no modifica el contador automático."}{" "}
-        Las fechas se ingresan en horario argentino.
       </p>
 
       {loadingNumbering && (
@@ -641,6 +646,22 @@ export default function NewEvent({
                 <option value="nocturno">Nocturno</option>
               </select>
             </label>
+
+            <ActingServiceSelect
+              accessToken={accessToken}
+              value={values.serviceId}
+              onChange={(value) => update("serviceId", value)}
+              disabled={
+                saving ||
+                loadingTypes ||
+                Boolean(catalogError) ||
+                types.length === 0 ||
+                sessionBlocked ||
+                !numberingReady ||
+                mustCheckList
+              }
+              onSessionExpired={onLogout}
+            />
 
             <label className="new-event__wide">
               Descripción *
