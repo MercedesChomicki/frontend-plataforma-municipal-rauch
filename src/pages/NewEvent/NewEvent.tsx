@@ -690,6 +690,7 @@ export default function NewEvent({
           <div className="new-event__grid">
             <div className="new-event__wide">
               <LocationPicker
+                accessToken={accessToken}
                 address={values.address}
                 onAddressChange={(address) => update("address", address)}
                 latitude={values.latitude}
